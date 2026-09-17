@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useState, useEffect } from "react";
 
 export default function PublicLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, dashboardPath } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,6 +14,15 @@ export default function PublicLayout() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const sectionId = location.hash.slice(1);
+    const timer = window.setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.hash]);
 
   const handleLogout = () => { logout(); navigate("/"); };
 
@@ -31,13 +40,13 @@ export default function PublicLayout() {
 
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Home</Link>
-            <a href="/#packages" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Packages</a>
-            <a href="/#how-it-works" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">How It Works</a>
-            <a href="/#about" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">About</a>
-            <a href="/#contact" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Contact</a>
+            <Link to="/#packages" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Packages</Link>
+            <Link to="/#how-it-works" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">How It Works</Link>
+            <Link to="/#about" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">About</Link>
+            <Link to="/#contact" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Contact</Link>
             {user ? (
               <div className="flex items-center gap-4">
-                <Link to={user.role === "admin" ? "/admin/dashboard" : "/client/dashboard"} className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Dashboard</Link>
+                <Link to={dashboardPath} className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Dashboard</Link>
                 <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Logout</button>
               </div>
             ) : (
@@ -58,13 +67,13 @@ export default function PublicLayout() {
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100 px-4 sm:px-6 py-4 flex flex-col gap-4 shadow-lg">
             <Link to="/" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Home</Link>
-            <a href="/#packages" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Packages</a>
-            <a href="/#how-it-works" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>How It Works</a>
-            <a href="/#about" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>About</a>
-            <a href="/#contact" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Contact</a>
+            <Link to="/#packages" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Packages</Link>
+            <Link to="/#how-it-works" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>How It Works</Link>
+            <Link to="/#about" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>About</Link>
+            <Link to="/#contact" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Contact</Link>
             {user ? (
               <>
-                <Link to={user.role === "admin" ? "/admin/dashboard" : "/client/dashboard"} className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+                <Link to={dashboardPath} className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Dashboard</Link>
                 <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="text-left text-gray-700 text-sm font-medium">Logout</button>
               </>
             ) : (
@@ -105,10 +114,10 @@ export default function PublicLayout() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Quick Links</h4>
             <div className="flex flex-col gap-2.5">
-              <a href="/#packages" className="text-gray-400 hover:text-white text-sm transition-colors">Packages</a>
+              <Link to="/#packages" className="text-gray-400 hover:text-white text-sm transition-colors">Packages</Link>
               <Link to="/register" className="text-gray-400 hover:text-white text-sm transition-colors">Book Appointment</Link>
               <Link to="/login" className="text-gray-400 hover:text-white text-sm transition-colors">Client Login</Link>
-              <a href="/#how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors">How It Works</a>
+              <Link to="/#how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors">How It Works</Link>
             </div>
           </div>
           <div>

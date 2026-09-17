@@ -107,6 +107,7 @@ async function req(method, path, body) {
     if (res.status === 401 && path !== '/auth/login') {
       setToken(null);
       localStorage.removeItem('sp_current_user');
+      window.dispatchEvent(new Event('sp:unauthorized'));
     }
     throw new ApiError(payload.error || `Request failed (${res.status})`, res.status, payload);
   }

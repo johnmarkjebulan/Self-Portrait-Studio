@@ -29,8 +29,7 @@ export default function Login() {
       const result = await login(form.email, form.password);
       if (result.success) {
         toast("Welcome back!", "success");
-        const user = JSON.parse(localStorage.getItem("sp_current_user") || "{}");
-        navigate(user.role === "admin" ? "/admin/dashboard" : "/client/dashboard");
+        navigate(result.user?.role === "admin" ? "/admin/dashboard" : "/client/dashboard", { replace: true });
       } else {
         toast(result.message, "error");
         setErrors({ general: result.message });

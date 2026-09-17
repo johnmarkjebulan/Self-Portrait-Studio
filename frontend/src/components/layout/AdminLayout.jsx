@@ -75,7 +75,7 @@ const navGroups = [
 const allNavItems = navGroups.flatMap(g => g.items);
 
 export default function AdminLayout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, authReady } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -99,6 +99,7 @@ export default function AdminLayout() {
     return () => { active = false; clearInterval(interval); };
   }, [user]);
 
+  if (!authReady && !user) return <div className="min-h-screen" style={{ backgroundColor: "#f3f4f6" }} />;
   if (!user) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/client/dashboard" replace />;
 

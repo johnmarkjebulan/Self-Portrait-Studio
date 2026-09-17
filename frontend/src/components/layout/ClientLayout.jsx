@@ -162,7 +162,7 @@ function ProfileDropdown({ user, onLogout, onClose }) {
 }
 
 export default function ClientLayout() {
-  const { user, logout, isClient } = useAuth();
+  const { user, logout, isClient, authReady } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -203,6 +203,7 @@ export default function ClientLayout() {
   // Close dropdowns on nav
   useEffect(() => { setShowBell(false); setShowProfile(false); }, [location.pathname]);
 
+  if (!authReady && !user) return <div className="min-h-screen bg-gray-50" />;
   if (!user) return <Navigate to="/login" replace />;
   if (!isClient) return <Navigate to="/admin/dashboard" replace />;
 
