@@ -1,0 +1,12 @@
+SELF-PORTRAIT STUDIO — PACKAGING VALIDATION
+Date: 2026-09-14
+
+PASS  Backend node:test foundation suite: 3/3
+PASS  Backend JavaScript syntax check (node --check)
+PASS  Frontend relative import resolution: 37 JS/JSX source files, 0 missing local imports
+PASS  Legacy/stale reference scan: no services/db, notificationsDb, appointment_date, appointment_time, is_read, is_active, payment_method, or fake deleted flag usage
+PASS  Clean package scan: no node_modules, backend/.env, *.bak, or dist folders included
+PASS  Fresh SQL demo credential hashes verified for admin2026 and client2026
+
+FRONTEND BUILD NOTE
+The uploaded node_modules came from Windows and contains a Windows-native Vite/Rolldown binding. It cannot run a Linux production build in the packaging environment. The source-level import/static checks passed. Run VERIFY_LOCAL.ps1 after SETUP_LOCAL.ps1 on Windows; it performs the real npm run build with the Windows dependencies installed locally.
