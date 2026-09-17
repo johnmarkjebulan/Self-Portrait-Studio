@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../models');
+const { sequelize } = require('../src/models');
 
 async function ensureMigrationTable() {
   const qi = sequelize.getQueryInterface();

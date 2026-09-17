@@ -1,18 +1,29 @@
-# dependencies
+# Dependencies
 node_modules/
 
-# local environment
+# Environment / secrets
 .env
 .env.*
-!.env.example
 
-# builds
+
+# Build output
 dist/
+coverage/
 
-# logs
+# Tooling / platform
+.vite/
+.vercel/
+.cache/
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# editor / OS
+# Editors / OS
 .vscode/
+.idea/
 .DS_Store
 Thumbs.db

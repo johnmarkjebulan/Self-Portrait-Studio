@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { dateKeyInTimeZone, isValidDateKey, isValidTime } = require('../utils/dateTime');
-const { canAdminTransition, canClientRequest } = require('../utils/appointmentState');
-const { computeDateAvailability } = require('../utils/availability');
+const { dateKeyInTimeZone, isValidDateKey, isValidTime } = require('../src/utils/dateTime');
+const { canAdminTransition, canClientRequest } = require('../src/utils/appointmentState');
+const { computeDateAvailability } = require('../src/utils/availability');
 
 test('date helpers use studio calendar dates', () => {
   assert.equal(dateKeyInTimeZone(new Date('2026-09-14T16:30:00Z')), '2026-09-15');

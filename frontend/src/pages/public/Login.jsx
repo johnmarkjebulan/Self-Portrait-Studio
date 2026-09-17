@@ -40,12 +40,6 @@ export default function Login() {
     }
   };
 
-  const fillDemo = (role) => {
-    if (role === "admin") setForm({ email: "admin@selfportrait.studio", password: "admin2026" });
-    else setForm({ email: "maria@gmail.com", password: "client2026" });
-    setErrors({});
-  };
-
   return (
     <div className="min-h-screen flex">
       {/* Left photo panel */}
@@ -86,17 +80,6 @@ export default function Login() {
 
           <h1 className="font-display text-3xl font-light text-gray-900 mb-1">Welcome back</h1>
           <p className="text-gray-500 text-sm mb-8">Sign in to your account to continue.</p>
-
-          {import.meta.env.DEV && (
-            <div className="flex gap-2 mb-8">
-              <button type="button" onClick={() => fillDemo("admin")} className="flex-1 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-2 px-3 rounded-lg transition-colors border border-gray-200">
-                Admin Demo
-              </button>
-              <button type="button" onClick={() => fillDemo("client")} className="flex-1 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-2 px-3 rounded-lg transition-colors border border-gray-200">
-                Client Demo
-              </button>
-            </div>
-          )}
 
           {errors.general && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">{errors.general}</div>

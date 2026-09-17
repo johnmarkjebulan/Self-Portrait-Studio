@@ -1,0 +1,18 @@
+NODE_ENV=development
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+STUDIO_TIME_ZONE=Asia/Manila
+
+# Production / Supabase PostgreSQL
+DATABASE_URL=
+
+# Optional local MySQL fallback
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=selfportrait_studio
+DB_USER=root
+DB_PASS=
+DB_AUTO_SYNC=false
+
+JWT_SECRET=replace-with-a-long-random-secret
+JWT_EXPIRES_IN=7d
