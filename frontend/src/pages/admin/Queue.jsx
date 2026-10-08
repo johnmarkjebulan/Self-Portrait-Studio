@@ -46,7 +46,7 @@ export default function AdminQueue() {
           const next = waiting[0];
           if (!next) { toast("No clients in queue.", "info"); return; }
           await appointmentsApi.update(next.id, { status: "now_serving" });
-          toast(`Calling ${next.tracking_number}`, "success");
+          toast(`${next.tracking_number} is now Ongoing`, "success");
           break;
 
         case "complete":
@@ -103,7 +103,7 @@ export default function AdminQueue() {
             <>
               <button onClick={() => act("call_next", appt)} disabled={loading || !!nowServing}
                 className="text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40">
-                Call Next
+                Start Session
               </button>
               <button onClick={() => act("no_show", appt)} disabled={loading}
                 className="text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 hover:bg-yellow-100 px-3 py-1.5 rounded-lg transition-colors">
@@ -147,7 +147,7 @@ export default function AdminQueue() {
       {waiting.length > 0 && !nowServing && (
         <button onClick={() => act("call_next", waiting[0])} disabled={loading}
           className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-semibold py-4 rounded-xl text-base mb-8 transition-colors">
-          📢 Call Next Client ({waiting[0].tracking_number})
+          📢 Start Next Client ({waiting[0].tracking_number})
         </button>
       )}
 
@@ -155,7 +155,7 @@ export default function AdminQueue() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <h2 className="text-gray-900 font-semibold text-sm">Now Serving</h2>
+            <h2 className="text-gray-900 font-semibold text-sm">Ongoing Session</h2>
             <span className="text-gray-400 text-xs">({completed.length} done today)</span>
           </div>
           {nowServing ? (

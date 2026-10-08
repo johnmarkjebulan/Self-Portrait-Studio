@@ -1,7 +1,7 @@
 {
   "name": "selfportrait-studio-backend",
   "version": "1.0.0",
-  "description": "Self-Portrait Studio — Express + Sequelize API with Supabase PostgreSQL",
+  "description": "Pose and Pics Photography Studio \u2014 Express + Sequelize API with Supabase PostgreSQL",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -9,7 +9,9 @@
     "db:check": "node -e \"require('./src/config/database').authenticate().then(() => { console.log('DB connection OK'); process.exit(0); }).catch((e) => { console.error(e); process.exit(1); })\"",
     "db:sync:safe": "node -e \"require('./src/models').sync().then(() => { console.log('DB synced safely'); process.exit(0); }).catch((e) => { console.error(e); process.exit(1); })\"",
     "db:migrate": "node scripts/migrate.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "db:seed": "node scripts/seed-studio-content.js",
+    "email:check": "node scripts/check-brevo.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

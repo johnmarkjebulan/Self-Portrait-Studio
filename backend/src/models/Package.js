@@ -11,6 +11,8 @@ const Package = sequelize.define('Package', {
   edited_photos: { type: DataTypes.INTEGER, defaultValue: 0 },
   printed_photos: { type: DataTypes.INTEGER, defaultValue: 0 },
   services: { type: DataTypes.JSON, defaultValue: [] },
+  image_url: { type: DataTypes.STRING(500), allowNull: true },
+  image_data: { type: DataTypes.TEXT('long'), allowNull: true },
   active: { type: DataTypes.BOOLEAN, defaultValue: true },
 }, { tableName: 'packages', underscored: true });
 

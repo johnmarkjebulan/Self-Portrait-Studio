@@ -3,12 +3,12 @@ const sequelize = require('../config/database');
 
 const StudioSettings = sequelize.define('StudioSettings', {
   id: { type: DataTypes.INTEGER, primaryKey: true, defaultValue: 1, autoIncrement: false },
-  studio_name: { type: DataTypes.STRING(200), defaultValue: 'Self-Portrait Studio' },
-  studio_address: { type: DataTypes.TEXT, allowNull: true },
-  studio_lat: { type: DataTypes.DOUBLE, defaultValue: 13.9371 },
-  studio_lng: { type: DataTypes.DOUBLE, defaultValue: 120.7276 },
-  studio_phone: { type: DataTypes.STRING(30), allowNull: true },
-  studio_email: { type: DataTypes.STRING(200), allowNull: true },
+  studio_name: { type: DataTypes.STRING(200), defaultValue: 'Pose and Pics Photography Studio' },
+  studio_address: { type: DataTypes.TEXT, allowNull: true, defaultValue: 'San Agustin St, Poblacion 4, Calaca, 4212 Batangas' },
+  studio_lat: { type: DataTypes.DOUBLE, allowNull: true },
+  studio_lng: { type: DataTypes.DOUBLE, allowNull: true },
+  studio_phone: { type: DataTypes.STRING(30), allowNull: true, defaultValue: '0910 831 3847' },
+  studio_email: { type: DataTypes.STRING(200), allowNull: true, defaultValue: 'poseandpics@gmail.com' },
   business_hours: { type: DataTypes.JSON, defaultValue: {} },
   daily_capacity: { type: DataTypes.INTEGER, defaultValue: 10 },
   slot_capacity: { type: DataTypes.INTEGER, defaultValue: 3 },

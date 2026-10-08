@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { notificationsApi } from "../../services/api";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import NotificationBell from "../common/NotificationBell";
 
 const Icon = ({ d, className = "w-4 h-4" }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
@@ -23,6 +23,8 @@ const ICONS = {
   notifications: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
   feedback: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
   logs: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+  posts: "M4 16l4-4a3 3 0 014 0l4 4m-2-2l1-1a3 3 0 014 0l1 1M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+  staff: "M17 20h5v-2a4 4 0 00-4-4h-1m-4 6H3v-2a4 4 0 014-4h2m4 6v-2a4 4 0 00-4-4m6-7a4 4 0 11-8 0 4 4 0 018 0zm7 2a3 3 0 10-6 0 3 3 0 006 0z",
   settings: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
 };
 
@@ -45,6 +47,7 @@ const navGroups = [
     label: "STUDIO",
     items: [
       { path: "/admin/packages", label: "Packages", icon: "packages" },
+      { path: "/admin/posts", label: "Posted Pictures", icon: "posts" },
       { path: "/admin/schedules", label: "Schedules", icon: "schedules" },
     ],
   },
@@ -59,7 +62,6 @@ const navGroups = [
   {
     label: "MONITORING",
     items: [
-      { path: "/admin/notifications", label: "Notifications", icon: "notifications", badge: true },
       { path: "/admin/feedback", label: "Feedback", icon: "feedback" },
       { path: "/admin/activity-logs", label: "Activity Logs", icon: "logs" },
     ],
@@ -67,6 +69,7 @@ const navGroups = [
   {
     label: "SYSTEM",
     items: [
+      { path: "/admin/staff", label: "Staff Accounts", icon: "staff" },
       { path: "/admin/settings", label: "Settings", icon: "settings" },
     ],
   },
@@ -79,29 +82,10 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
-
-  useEffect(() => {
-    if (!user) return;
-
-    let active = true;
-    const loadUnread = async () => {
-      try {
-        const count = await notificationsApi.getUnreadCount();
-        if (active) setUnread(count);
-      } catch (err) {
-        console.error("Failed to load admin notification count:", err);
-      }
-    };
-
-    loadUnread();
-    const interval = setInterval(loadUnread, 10000);
-    return () => { active = false; clearInterval(interval); };
-  }, [user]);
 
   if (!authReady && !user) return <div className="min-h-screen" style={{ backgroundColor: "#f3f4f6" }} />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/client/dashboard" replace />;
+  if (!isAdmin) return <Navigate to={user?.role === "staff" ? "/staff/dashboard" : "/client/dashboard"} replace />;
 
   const handleLogout = () => { logout(); navigate("/"); };
   const currentPage = allNavItems.find(n => n.path === location.pathname);
@@ -120,8 +104,8 @@ export default function AdminLayout() {
               <span className="text-white font-bold text-xs">SP</span>
             </div>
             <div>
-              <p className="text-white font-semibold text-xs leading-none">Self-Portrait</p>
-              <p className="text-white/40 text-[10px] leading-none mt-0.5">Studio Admin</p>
+              <p className="text-white font-semibold text-xs leading-none">Pose and Pics</p>
+              <p className="text-white/40 text-[10px] leading-none mt-0.5">Owner / Admin</p>
             </div>
           </Link>
         </div>
@@ -134,7 +118,7 @@ export default function AdminLayout() {
             </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-semibold leading-none truncate">{user.name}</p>
-              <p className="text-amber-400 text-[10px] mt-0.5 font-medium">Administrator</p>
+              <p className="text-amber-400 text-[10px] mt-0.5 font-medium">Owner / Administrator</p>
             </div>
           </div>
         </div>
@@ -164,9 +148,6 @@ export default function AdminLayout() {
                         <Icon d={ICONS[item.icon]} className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-amber-400" : "text-white/30 group-hover:text-white/50"}`} />
                         {item.label}
                       </span>
-                      {item.badge && unread > 0 && (
-                        <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center leading-none">{unread}</span>
-                      )}
                     </Link>
                   );
                 })}
@@ -197,16 +178,13 @@ export default function AdminLayout() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-gray-900 font-semibold text-sm truncate">{currentPage?.label || "Admin Panel"}</h1>
-            <p className="text-gray-400 text-xs hidden sm:block">Self-Portrait Studio Management</p>
+            <p className="text-gray-400 text-xs hidden sm:block">Pose and Pics Photography Studio Management</p>
           </div>
           <span className="text-gray-400 text-xs hidden md:block">{new Date().toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" })}</span>
-          <Link to="/admin/notifications" className="relative text-gray-400 hover:text-gray-700 transition-colors p-1.5">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-            {unread > 0 && <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unread}</span>}
-          </Link>
+          <NotificationBell role="admin" />
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main className="portal-canvas flex-1 p-4 sm:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

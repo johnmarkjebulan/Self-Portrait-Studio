@@ -1,138 +1,17 @@
-import { useState, useEffect } from "react";
-import { feedbackApi } from "../../services/api.js";
+import { useEffect, useState } from "react";
+import { feedbackApi } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
 
-function StarDisplay({ rating }) {
-  return (
-    <span className="text-amber-400 text-sm">
-      {"★".repeat(rating)}
-      {"☆".repeat(5 - rating)}
-    </span>
-  );
-}
-
-export default function Feedback() {
-  const { showToast } = useToast();
-  const [feedbackList, setFeedbackList] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await feedbackApi.getAll();
-        setFeedbackList(data);
-      } catch (err) {
-        showToast("Failed to load feedback", "error");
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  const total = feedbackList.length;
-  const avgRating =
-    total > 0
-      ? feedbackList.reduce((sum, f) => sum + (f.rating || 0), 0) / total
-      : 0;
-
-  const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: feedbackList.filter((f) => f.rating === star).length,
-  }));
-
-  if (loading) {
-    return (
-      <div className="p-6 text-center text-gray-400">Loading feedback...</div>
-    );
-  }
-
-  return (
-    <div className="p-6 max-w-screen-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Feedback</h1>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {/* Average Rating */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col items-center justify-center text-center">
-          <div className="text-4xl font-bold text-amber-500 mb-1">
-            {avgRating.toFixed(1)}
-          </div>
-          <StarDisplay rating={Math.round(avgRating)} />
-          <div className="text-xs text-gray-400 mt-1">Average Rating</div>
-        </div>
-
-        {/* Rating Breakdown */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <div className="text-xs text-gray-500 font-semibold uppercase mb-3">
-            Rating Breakdown
-          </div>
-          <div className="space-y-1.5">
-            {ratingBreakdown.map(({ star, count }) => {
-              const pct = total > 0 ? (count / total) * 100 : 0;
-              return (
-                <div key={star} className="flex items-center gap-2 text-sm">
-                  <span className="text-amber-400 w-4">{star}★</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-amber-400 h-2 rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-gray-500 w-6 text-right">{count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Total Count */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col items-center justify-center text-center">
-          <div className="text-4xl font-bold text-blue-600 mb-1">{total}</div>
-          <div className="text-xs text-gray-400">Total Reviews</div>
-        </div>
-      </div>
-
-      {/* Feedback List */}
-      {feedbackList.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">No feedback yet</div>
-      ) : (
-        <div className="space-y-4">
-          {feedbackList.map((f) => (
-            <div
-              key={f.id}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm p-5"
-            >
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <div>
-                  <div className="font-semibold text-gray-800">
-                    {f.client?.name || "Unknown Client"}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Booking:{" "}
-                    <span className="font-mono">
-                      {f.appointment?.tracking_number || "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <StarDisplay rating={f.rating || 0} />
-                  <span className="text-xs text-gray-400">
-                    {f.created_at
-                      ? new Date(f.created_at).toLocaleDateString()
-                      : ""}
-                  </span>
-                </div>
-              </div>
-              {f.comment && (
-                <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  {f.comment}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+export default function Feedback(){
+ const {toast}=useToast(); const {user}=useAuth(); const [rows,setRows]=useState([]); const [loading,setLoading]=useState(true); const [draft,setDraft]=useState({}); const [filter,setFilter]=useState('all');
+ const load=()=>feedbackApi.getAll().then(setRows).catch(e=>toast(e.message||'Failed to load feedback','error')).finally(()=>setLoading(false)); useEffect(()=>{load()},[]);
+ async function reply(id){const text=(draft[id]||'').trim();if(!text)return toast('Write a reply first.','warning');try{await feedbackApi.reply(id,text);toast('Reply saved.','success');setDraft(d=>({...d,[id]:''}));await load()}catch(e){toast(e.message||'Could not save reply','error')}}
+ const visible=rows.filter(r=>filter==='all'||(filter==='unreplied'?!r.staff_reply:!!r.staff_reply)); const avg=rows.length?rows.reduce((s,r)=>s+Number(r.rating||0),0)/rows.length:0;
+ return <div className="max-w-6xl mx-auto animate-fade-in"><div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7"><div><h1 className="text-2xl font-semibold">Client Feedback</h1><p className="text-sm text-gray-500 mt-1">Owner and staff can review feedback and send a studio reply.</p></div><div className="flex gap-2"><select value={filter} onChange={e=>setFilter(e.target.value)} className="border rounded-xl px-3 py-2 text-sm"><option value="all">All Feedback</option><option value="unreplied">Needs Reply</option><option value="replied">Replied</option></select></div></div>
+ <div className="grid sm:grid-cols-3 gap-4 mb-6"><div className="bg-white border rounded-2xl p-5"><p className="text-xs uppercase tracking-wider text-gray-500">Total Feedback</p><p className="text-3xl font-semibold mt-2">{rows.length}</p></div><div className="bg-white border rounded-2xl p-5"><p className="text-xs uppercase tracking-wider text-gray-500">Average Rating</p><p className="text-3xl font-semibold mt-2">{avg.toFixed(1)} <span className="text-amber-400 text-xl">★</span></p></div><div className="bg-white border rounded-2xl p-5"><p className="text-xs uppercase tracking-wider text-gray-500">Needs Reply</p><p className="text-3xl font-semibold mt-2">{rows.filter(r=>!r.staff_reply).length}</p></div></div>
+ {loading?<div className="text-center text-gray-400 py-10">Loading feedback…</div>:visible.length===0?<div className="bg-white border rounded-2xl p-10 text-center text-gray-500">No feedback in this view.</div>:<div className="space-y-4">{visible.map(f=><article key={f.id} className="bg-white border rounded-2xl p-5 card-shadow"><div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3"><div><p className="font-semibold text-gray-900">{f.client?.name||'Client'}</p><p className="text-xs text-gray-400 mt-1">{f.appointment?.tracking_number||'General Studio Feedback'} · {new Date(f.created_at).toLocaleDateString('en-PH')}</p></div><div className="text-amber-400">{'★'.repeat(f.rating||0)}<span className="text-gray-200">{'★'.repeat(5-(f.rating||0))}</span></div></div>{f.comment&&<p className="text-sm text-gray-600 mt-4 whitespace-pre-line">{f.comment}</p>}
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">{[['Booking',f.booking_experience],['Staff',f.staff_service],['Studio',f.studio_experience],['Cleanliness',f.cleanliness]].map(([l,v])=><div key={l} className="bg-gray-50 rounded-lg p-2"><span className="text-gray-500">{l}</span><span className="float-right text-amber-500">{v||'—'}★</span></div>)}</div>
+ {f.staff_reply?<div className="mt-4 bg-emerald-50 border border-emerald-100 rounded-xl p-4"><p className="text-xs font-semibold text-emerald-800">STUDIO REPLY</p><p className="text-sm text-emerald-900 mt-1 whitespace-pre-line">{f.staff_reply}</p></div>:<div className="mt-4"><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Reply as {user?.role==='admin'?'Owner':'Staff'}</label><div className="flex flex-col sm:flex-row gap-2"><textarea value={draft[f.id]||''} onChange={e=>setDraft({...draft,[f.id]:e.target.value})} rows={2} placeholder="Write a courteous response…" className="flex-1 border rounded-xl px-3 py-2 text-sm resize-none"/><button onClick={()=>reply(f.id)} className="bg-gray-900 text-white rounded-xl px-4 py-2 text-sm font-semibold">Send Reply</button></div></div>}</article>)}</div>}
+ </div>
 }

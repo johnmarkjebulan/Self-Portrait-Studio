@@ -53,7 +53,7 @@ async function recalculateAppointmentPayment(appt) {
 
 router.get('/', authenticate, async (req, res, next) => {
   try {
-    const where = req.user.role === 'admin' ? {} : { client_id: req.user.id };
+    const where = ['admin', 'staff'].includes(req.user.role) ? {} : { client_id: req.user.id };
     if (req.query.appointment_id) where.appointment_id = req.query.appointment_id;
     const payments = await Payment.findAll({ where, include, order: [['created_at', 'DESC']] });
     res.json({ payments });

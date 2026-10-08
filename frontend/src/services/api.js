@@ -116,6 +116,8 @@ async function req(method, path, body) {
 
 export const authApi = {
   register: (data) => req('POST', '/auth/register', data),
+  verifyEmail: (email, code) => req('POST', '/auth/verify-email', { email, code }),
+  resendVerification: (email) => req('POST', '/auth/resend-verification', { email }),
   login: (email, password) => req('POST', '/auth/login', { email, password }),
   me: () => req('GET', '/auth/me'),
   updateProfile: (data) => req('PATCH', '/auth/profile', data),
@@ -174,16 +176,31 @@ export const notificationsApi = {
 export const feedbackApi = {
   getAll: () => req('GET', '/feedback').then((r) => r.feedback),
   create: (data) => req('POST', '/feedback', data).then((r) => r.feedback),
+  reply: (id, reply) => req('PATCH', `/feedback/${id}/reply`, { reply }).then((r) => r.feedback),
 };
 
 export const usersApi = {
   getAll: (role) => req('GET', `/users${role ? `?role=${encodeURIComponent(role)}` : ''}`).then((r) => r.users),
   find: (id) => req('GET', `/users/${id}`).then((r) => r.user),
+  createStaff: (data) => req('POST', '/users/staff', data).then((r) => r.user),
+  updateStaff: (id, data) => req('PATCH', `/users/staff/${id}`, data).then((r) => r.user),
+};
+
+
+export const postsApi = {
+  getPublic: () => req('GET', '/posts/public').then((r) => r.posts),
+  getAll: () => req('GET', '/posts').then((r) => r.posts),
+  create: (data) => req('POST', '/posts', data).then((r) => r.post),
+  update: (id, data) => req('PATCH', `/posts/${id}`, data).then((r) => r.post),
+  delete: (id) => req('DELETE', `/posts/${id}`),
+  toggleLike: (id) => req('POST', `/posts/${id}/like`),
 };
 
 export const settingsApi = {
   get: () => req('GET', '/settings').then((r) => normalizeSettings(r.settings)),
   update: (data) => req('PATCH', '/settings', data).then((r) => normalizeSettings(r.settings)),
+  emailStatus: () => req('GET', '/settings/email/status'),
+  sendEmailTest: (email) => req('POST', '/settings/email/test', { email }),
 };
 
 export const schedulesApi = {
@@ -191,6 +208,11 @@ export const schedulesApi = {
   create: (data) => req('POST', '/schedules', data).then((r) => r.schedule),
   update: (id, data) => req('PATCH', `/schedules/${id}`, data).then((r) => r.schedule),
   delete: (id) => req('DELETE', `/schedules/${id}`),
+};
+
+
+export const publicStatsApi = {
+  get: () => req('GET', '/public-stats'),
 };
 
 export const analyticsApi = { get: (range = 'month') => req('GET', `/analytics?range=${encodeURIComponent(range)}`) };

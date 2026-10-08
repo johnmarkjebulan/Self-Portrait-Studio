@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { sequelize } = require('./models');
 const routes = require('./routes');
+const { autoCompleteDueSessions } = require('./services/appointmentLifecycle');
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
@@ -68,7 +69,11 @@ sequelize.authenticate()
       await sequelize.sync();
       console.log('Database schema sync complete.');
     }
-    app.listen(PORT, () => console.log(`Self-Portrait Studio API → http://localhost:${PORT}`));
+    await autoCompleteDueSessions().catch((err) => console.error('Initial session lifecycle check failed:', err.message));
+    setInterval(() => {
+      autoCompleteDueSessions().catch((err) => console.error('Session lifecycle check failed:', err.message));
+    }, 30 * 1000).unref();
+    app.listen(PORT, () => console.log(`Pose and Pics Photography Studio API → http://localhost:${PORT}`));
   })
   .catch((err) => {
     console.error('DB connection failed:', err);

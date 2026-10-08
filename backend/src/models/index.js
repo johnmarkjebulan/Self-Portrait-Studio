@@ -9,52 +9,29 @@ const Feedback = require('./Feedback');
 const ActivityLog = require('./ActivityLog');
 const StudioSettings = require('./StudioSettings');
 const Schedule = require('./Schedule');
+const Post = require('./Post');
+const PostLike = require('./PostLike');
 
-// ── Associations ─────────────────────────────────────────────
-
-// User → Appointments (as client)
 User.hasMany(Appointment, { foreignKey: 'client_id', as: 'appointments' });
 Appointment.belongsTo(User, { foreignKey: 'client_id', as: 'client' });
-
-// Package → Appointments
 Package.hasMany(Appointment, { foreignKey: 'package_id', as: 'appointments' });
 Appointment.belongsTo(Package, { foreignKey: 'package_id', as: 'package' });
-
-// Appointment → Payments
 Appointment.hasMany(Payment, { foreignKey: 'appointment_id', as: 'payments' });
 Payment.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
-
-// Appointment → Feedback (1-to-1)
 Appointment.hasOne(Feedback, { foreignKey: 'appointment_id', as: 'feedback' });
 Feedback.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
-
-// User → Notifications
 User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-
-// User → Feedback (as client)
 User.hasMany(Feedback, { foreignKey: 'client_id', as: 'feedback' });
 Feedback.belongsTo(User, { foreignKey: 'client_id', as: 'client' });
-
-// User → Payments (as client)
 User.hasMany(Payment, { foreignKey: 'client_id', as: 'payments' });
 Payment.belongsTo(User, { foreignKey: 'client_id', as: 'client' });
+User.hasMany(Post, { foreignKey: 'author_id', as: 'posts' });
+Post.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
+Post.hasMany(PostLike, { foreignKey: 'post_id', as: 'likes', onDelete: 'CASCADE' });
+PostLike.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
+User.hasMany(PostLike, { foreignKey: 'client_id', as: 'postLikes', onDelete: 'CASCADE' });
+PostLike.belongsTo(User, { foreignKey: 'client_id', as: 'client' });
 
-async function sync(options = {}) {
-  return sequelize.sync(options);
-}
-
-module.exports = {
-  sequelize,
-  User,
-  Package,
-  Addon,
-  Appointment,
-  Payment,
-  Notification,
-  Feedback,
-  ActivityLog,
-  StudioSettings,
-  Schedule,
-  sync,
-};
+async function sync(options = {}) { return sequelize.sync(options); }
+module.exports = { sequelize, User, Package, Addon, Appointment, Payment, Notification, Feedback, ActivityLog, StudioSettings, Schedule, Post, PostLike, sync };

@@ -1,21 +1,38 @@
 import { Link } from "react-router-dom";
-import { packagesApi, settingsApi } from "../../services/api";
+import { packagesApi, settingsApi, publicStatsApi } from "../../services/api";
 import { useEffect, useState } from "react";
 
-function HeroSection() {
+const STUDIO_MEDIA = [
+  { src: "/studio-media/packages-group-hug-threshold.jpg", title: "Group Hug & Threshold Packages", type: "Packages" },
+  { src: "/studio-media/packages-candid-smooch.jpg", title: "Candid & Smooch Packages", type: "Packages" },
+  { src: "/studio-media/packages-bum-up-flex.jpg", title: "Bum Up & Flex Ur Tog Packages", type: "Packages" },
+  { src: "/studio-media/packages-wish-maternity.jpg", title: "Birthday & Maternity Packages", type: "Packages" },
+  { src: "/studio-media/packages-linked-tangled.jpg", title: "Linked In & Tangled Up Packages", type: "Packages" },
+  { src: "/studio-media/toddler-backdrops.jpg", title: "Toddler Monthly Milestone Backdrops", type: "Backdrops" },
+  { src: "/studio-media/available-backdrops.jpg", title: "Available Plain Backdrops", type: "Backdrops" },
+  { src: "/studio-media/add-ons.jpg", title: "Studio Add-ons", type: "Add-ons" },
+  { src: "/studio-media/toddler-sample-gallery.jpg", title: "Toddler Portrait Samples", type: "Gallery" },
+  { src: "/studio-media/promo-anniversary.jpg", title: "Ikalong Taon Anniversary Promo", type: "Promos" },
+  { src: "/studio-media/promo-candid.jpg", title: "Candid Special Promo", type: "Promos" },
+  { src: "/studio-media/promo-smooch.jpg", title: "Smooch Special Promo", type: "Promos" },
+  { src: "/studio-media/promo-tangled.jpg", title: "Tangled Up Special Promo", type: "Promos" },
+  { src: "/studio-media/promo-linkedin.jpg", title: "LinkedIn Special Promo", type: "Promos" },
+];
+
+function HeroSection({ stats }) {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="cinematic-hero relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&h=900&fit=crop&auto=format"
-          alt="Photography studio"
-          className="w-full h-full object-cover"
+          src="/studio-media/hero-main.jpg"
+          alt="Pose and Pics Photography Studio portrait"
+          className="hero-kenburns w-full h-full object-cover"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.7) 100%)" }} />
+        <div className="hero-vignette absolute inset-0" /><div className="hero-light hero-light-a" /><div className="hero-light hero-light-b" /><div className="hero-grain" />
       </div>
 
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        <p className="text-white/70 text-xs uppercase tracking-[0.25em] font-semibold mb-6">Premium Portrait Studio · Baclaran, Balayan, Batangas</p>
+      <div className="hero-content relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <p className="text-white/70 text-xs uppercase tracking-[0.25em] font-semibold mb-6">Premium Portrait Studio · San Agustin St, Poblacion 4, Calaca, Batangas</p>
         <h1 className="font-display text-5xl md:text-7xl font-light leading-none mb-8 text-white">
           Your Moment.<br />
           <em className="not-italic text-white/90">Your Style.</em><br />
@@ -25,7 +42,7 @@ function HeroSection() {
           A curated photography experience where every frame tells your unique story. Book your session online in minutes.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/register" className="bg-white hover:bg-gray-100 text-gray-900 font-semibold px-8 py-4 rounded-xl text-base transition-all">
+          <Link to="/register" className="studio-cta bg-white hover:bg-gray-100 text-gray-900 font-semibold px-8 py-4 rounded-xl text-base transition-all">
             Book an Appointment
           </Link>
           <a href="#packages" className="border border-white/30 hover:border-white/60 text-white/80 hover:text-white font-medium px-8 py-4 rounded-xl text-base transition-all">
@@ -34,7 +51,7 @@ function HeroSection() {
         </div>
 
         <div className="mt-12 sm:mt-16 grid grid-cols-3 gap-3 sm:gap-8 max-w-sm mx-auto">
-          {[["500+", "Sessions Done"], ["4.9★", "Avg Rating"], ["3", "Studio Setups"]].map(([val, label]) => (
+          {[[String(stats.sessions_done), "Sessions Done"], [stats.average_rating == null ? "—" : `${stats.average_rating.toFixed(1)}★`, "Avg Rating"], [String(stats.available_packages), "Available Packages"]].map(([val, label]) => (
             <div key={label} className="text-center">
               <p className="font-display text-2xl font-semibold text-white">{val}</p>
               <p className="text-white/50 text-xs mt-1">{label}</p>
@@ -54,48 +71,34 @@ function HeroSection() {
 
 function AboutSection() {
   return (
-    <section id="about" className="py-16 sm:py-24 px-4 sm:px-6 bg-white">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div className="relative">
-          <img
-            src="https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=700&h=800&fit=crop&auto=format"
-            alt="Studio interior"
-            className="w-full rounded-2xl object-cover h-[500px]"
-          />
-          <div className="absolute -bottom-6 -right-6 bg-gray-900 rounded-2xl p-6 shadow-2xl">
-            <p className="font-display text-3xl font-bold text-white">7+</p>
-            <p className="text-gray-400 text-sm font-medium">Years of Experience</p>
-          </div>
-        </div>
+    <section id="about" className="studio-section py-16 sm:py-24 px-4 sm:px-6 bg-white">
+      <div className="max-w-5xl mx-auto text-center">
+        <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">About the Studio</p>
+        <h2 className="font-display text-4xl md:text-5xl font-light text-gray-900 mb-6 leading-tight">
+          The art of capturing <em className="not-italic text-gray-600">you</em>
+        </h2>
+        <p className="text-gray-500 text-base leading-relaxed mb-6 max-w-3xl mx-auto">
+          Pose and Pics Photography Studio is a photography experience designed to make every session comfortable, memorable, and uniquely yours.
+          We believe every person deserves beautiful, professionally crafted portraits that
+          celebrate who they are — whether it's a solo session, couple shoot, or family portrait.
+        </p>
+        <p className="text-gray-500 text-base leading-relaxed mb-10 max-w-3xl mx-auto">
+          Our online booking system makes scheduling effortless. Choose your package,
+          pick a time slot, and complete your booking online. We handle everything else.
+        </p>
 
-        <div>
-          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">About the Studio</p>
-          <h2 className="font-display text-4xl md:text-5xl font-light text-gray-900 mb-6 leading-tight">
-            The art of capturing <em className="not-italic text-gray-600">you</em>
-          </h2>
-          <p className="text-gray-500 text-base leading-relaxed mb-6">
-            Self-Portrait Studio is a premium photography experience designed around you.
-            We believe every person deserves beautiful, professionally crafted portraits that
-            celebrate who they are — whether it's a solo session, couple shoot, or family portrait.
-          </p>
-          <p className="text-gray-500 text-base leading-relaxed mb-8">
-            Our online booking system makes scheduling effortless. Choose your package,
-            pick a time slot, and pay securely via QR Ph. We handle everything else.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { title: "Choose a Package", desc: "Select from our curated packages" },
-              { title: "Book Online", desc: "Pick your date and time instantly" },
-              { title: "Pay via QR Ph", desc: "Secure, hassle-free payment" },
-              { title: "Arrive & Shine", desc: "We handle the rest" },
-            ].map(item => (
-              <div key={item.title} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <p className="text-gray-800 font-semibold text-sm mb-1">{item.title}</p>
-                <p className="text-gray-500 text-xs">{item.desc}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+          {[
+            { title: "Choose a Package", desc: "Select from our curated packages" },
+            { title: "Book Online", desc: "Pick your date and time instantly" },
+            { title: "Review Your Booking", desc: "Confirm your selected package and add-ons" },
+            { title: "Arrive & Shine", desc: "We handle the rest" },
+          ].map(item => (
+            <div key={item.title} className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <p className="text-gray-800 font-semibold text-sm mb-1">{item.title}</p>
+              <p className="text-gray-500 text-xs">{item.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -104,7 +107,7 @@ function AboutSection() {
 
 function PackagesSection({ packages }) {
   return (
-    <section id="packages" className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
+    <section id="packages" className="studio-section py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">Our Offerings</p>
@@ -112,10 +115,12 @@ function PackagesSection({ packages }) {
           <p className="text-gray-500 mt-4 max-w-xl mx-auto text-sm">Every package includes professional lighting, multiple backdrops, and our signature editing treatment.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-7 items-stretch">
           {packages.map((pkg, i) => (
-            <div key={pkg.id} className={`relative rounded-2xl border p-8 flex flex-col bg-white transition-all hover:shadow-lg ${i === 1 ? "border-gray-900 shadow-md ring-1 ring-gray-900/5" : "border-gray-200"}`}>
-              {i === 1 && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-4 py-1 rounded-full">Most Popular</div>}
+            <div key={pkg.id} className={`studio-card-motion relative rounded-2xl border overflow-hidden flex flex-col bg-white h-full ${i === 1 ? "border-gray-900 shadow-md ring-1 ring-gray-900/5" : "border-gray-200"}`}>
+              {i === 1 && <div className="floating-badge absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-gray-900 text-white text-xs font-bold px-4 py-1 rounded-full">Most Popular</div>}
+              {(pkg.image_data || pkg.image_url) && <button type="button" onClick={() => window.open(pkg.image_data || pkg.image_url, "_blank")} className="w-full bg-gray-100"><img src={pkg.image_data || pkg.image_url} alt={pkg.name} className="w-full aspect-[4/5] object-contain bg-white" /></button>}
+              <div className="p-8 flex flex-col flex-1">
               <div className="mb-6">
                 <h3 className="font-display text-2xl font-medium text-gray-900 mb-2">{pkg.name}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{pkg.description}</p>
@@ -150,9 +155,106 @@ function PackagesSection({ packages }) {
               <Link to="/register" className={`text-center py-3 rounded-xl font-semibold text-sm transition-all ${i === 1 ? "bg-gray-900 hover:bg-gray-800 text-white" : "border border-gray-200 hover:border-gray-400 text-gray-700 hover:bg-gray-50"}`}>
                 Book Now
               </Link>
+              </div>
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+
+function StudioMediaSection() {
+  const [active, setActive] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const filters = ["All", "Packages", "Promos", "Backdrops", "Add-ons", "Gallery"];
+  const visible = filter === "All" ? STUDIO_MEDIA : STUDIO_MEDIA.filter((item) => item.type === filter);
+
+  useEffect(() => {
+    if (!active) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setActive(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [active]);
+
+  return (
+    <section id="gallery" className="studio-section py-16 sm:py-24 px-4 sm:px-6 bg-white">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">Pose and Pics Studio</p>
+          <h2 className="font-display text-4xl md:text-5xl font-light text-gray-900">Packages, Promos & Studio Gallery</h2>
+          <p className="text-gray-500 mt-4 max-w-2xl mx-auto text-sm leading-relaxed">
+            Browse the studio's package cards, current promotional materials, available backdrops, add-ons, sample portraits, and payment reference. Click any image to view it in full size.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {filters.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setFilter(item)}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${filter === item ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900"}`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visible.map((item) => (
+            <button
+              key={item.src}
+              type="button"
+              onClick={() => setActive(item)}
+              className="group text-left bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              <div className="bg-white aspect-[4/5] overflow-hidden">
+                <img
+                  src={item.src}
+                  alt={item.title}
+                  loading="lazy"
+                  className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
+              <div className="p-4">
+                <span className="inline-block text-[11px] uppercase tracking-wider font-semibold text-gray-400 mb-1">{item.type}</span>
+                <p className="text-gray-900 font-semibold text-sm">{item.title}</p>
+                <p className="text-gray-500 text-xs mt-1">Click to enlarge</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {active && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm p-4 sm:p-8 flex items-center justify-center"
+            onClick={() => setActive(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={active.title}
+          >
+            <div className="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center" onClick={(event) => event.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setActive(null)}
+                className="absolute -top-2 right-0 sm:-right-2 z-10 w-10 h-10 rounded-full bg-white text-gray-900 shadow-lg text-xl font-bold flex items-center justify-center"
+                aria-label="Close image preview"
+              >
+                ×
+              </button>
+              <img src={active.src} alt={active.title} className="max-w-full max-h-[82vh] object-contain rounded-xl shadow-2xl bg-white" />
+              <div className="mt-3 bg-black/40 text-white px-4 py-2 rounded-full text-sm">{active.title}</div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -169,7 +271,7 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6 bg-white">
+    <section id="how-it-works" className="studio-section py-16 sm:py-24 px-4 sm:px-6 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">Simple Process</p>
@@ -205,10 +307,13 @@ function formatBusinessHours(hours = {}) {
 }
 
 function ContactSection({ settings }) {
-  const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${settings.studio_lng - 0.015}%2C${settings.studio_lat - 0.010}%2C${settings.studio_lng + 0.015}%2C${settings.studio_lat + 0.010}&layer=mapnik&marker=${settings.studio_lat}%2C${settings.studio_lng}`;
+  const studioAddress = "San Agustin St, Poblacion 4, Calaca, 4212 Batangas";
+  const mapsQuery = encodeURIComponent(studioAddress);
+  const mapSrc = `https://www.google.com/maps?q=${mapsQuery}&output=embed`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
 
   return (
-    <section id="contact" className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
+    <section id="contact" className="studio-section py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <p className="text-gray-400 text-xs uppercase tracking-[0.2em] font-semibold mb-4">Find Us</p>
@@ -234,10 +339,12 @@ function ContactSection({ settings }) {
               <h3 className="font-semibold text-gray-900 mb-5">{settings.studio_name}</h3>
               <div className="flex flex-col gap-4">
                 {[
-                  { label: "Address", value: settings.studio_address },
-                  { label: "Phone", value: settings.studio_phone },
-                  { label: "Email", value: settings.studio_email },
-                  { label: "Hours", value: formatBusinessHours(settings.business_hours) },
+                  { label: "Address", value: studioAddress },
+                  { label: "Phone", value: "0910 831 3847" },
+                  { label: "Email", value: "poseandpics@gmail.com" },
+                  ...(settings.business_hours && Object.keys(settings.business_hours).length
+                    ? [{ label: "Hours", value: formatBusinessHours(settings.business_hours) }]
+                    : []),
                 ].map(item => (
                   <div key={item.label}>
                     <p className="text-gray-400 text-xs uppercase tracking-wider mb-0.5">{item.label}</p>
@@ -253,7 +360,7 @@ function ContactSection({ settings }) {
               <Link to="/register" className="block text-center bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm">
                 Get Started
               </Link>
-              <a href={`https://www.google.com/maps?q=${settings.studio_lat},${settings.studio_lng}`}
+              <a href={googleMapsUrl}
                 target="_blank" rel="noopener noreferrer"
                 className="block text-center mt-3 border border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-900 font-medium py-3 rounded-xl transition-colors text-sm">
                 Open in Google Maps →
@@ -268,24 +375,33 @@ function ContactSection({ settings }) {
 
 export default function Landing() {
   const [packages, setPackages] = useState([]);
+  const [stats, setStats] = useState({ sessions_done: 0, average_rating: null, available_packages: 0 });
   const [settings, setSettings] = useState({
-    studio_name: "Self-Portrait Studio",
-    studio_address: "Baclaran, Balayan, Batangas",
-    studio_phone: "0917-123-4567",
-    studio_email: "hello@selfportrait.studio",
-    studio_lat: 13.9371,
-    studio_lng: 120.7276,
+    studio_name: "Pose and Pics Photography Studio",
+    studio_address: "San Agustin St, Poblacion 4, Calaca, 4212 Batangas",
+    studio_phone: "0910 831 3847",
+    studio_email: "poseandpics@gmail.com",
   });
 
   useEffect(() => {
     async function load() {
       try {
-        const [pkgs, studioSettings] = await Promise.all([
+        const [pkgs, studioSettings, publicStats] = await Promise.all([
           packagesApi.getAll(),
           settingsApi.get(),
+          publicStatsApi.get(),
         ]);
         setPackages(pkgs);
-        if (studioSettings) setSettings(studioSettings);
+        if (publicStats) setStats(publicStats);
+        if (studioSettings) {
+          setSettings({
+            ...studioSettings,
+            studio_name: "Pose and Pics Photography Studio",
+            studio_address: "San Agustin St, Poblacion 4, Calaca, 4212 Batangas",
+            studio_phone: "0910 831 3847",
+            studio_email: "poseandpics@gmail.com",
+          });
+        }
       } catch (err) {
         console.error("Failed to load studio data:", err);
       }
@@ -295,9 +411,10 @@ export default function Landing() {
 
   return (
     <div className="animate-fade-in">
-      <HeroSection />
+      <HeroSection stats={stats} />
       <AboutSection />
       <PackagesSection packages={packages} />
+      <StudioMediaSection />
       <HowItWorksSection />
       <ContactSection settings={settings} />
     </div>

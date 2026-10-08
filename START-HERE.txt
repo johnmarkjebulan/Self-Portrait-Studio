@@ -1,0 +1,20 @@
+POSE AND PICS PHOTOGRAPHY STUDIO — START HERE
+
+1) Copy your EXISTING WORKING backend/.env into this new project's backend folder.
+   Do not replace it with placeholder values. If needed, use backend/.env.example as the guide.
+
+2) From project root:
+   npm install
+
+3) Backend terminal:
+   cd backend
+   npm run db:check
+   npm run db:migrate
+   npm run email:check   (after real Brevo values are in .env)
+   npm run dev
+
+4) Frontend terminal:
+   cd frontend
+   npm run dev
+
+Read README.md for the complete feature list and Brevo/QR workflow.

@@ -82,3 +82,216 @@ body {
 .card-shadow-md {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
 }
+
+/* =========================================================
+   POSE & PICS — CINEMATIC MOTION SYSTEM
+   Subtle studio-inspired motion. Respects reduced motion.
+========================================================= */
+:root {
+  --studio-ink: #0d1117;
+  --studio-amber: #f59e0b;
+  --studio-cream: #fffaf1;
+  --studio-warm: rgba(245, 158, 11, 0.14);
+  --studio-cool: rgba(99, 102, 241, 0.10);
+}
+
+@keyframes studio-drift-a {
+  0%, 100% { transform: translate3d(-3%, -2%, 0) scale(1); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.08); }
+}
+
+@keyframes studio-drift-b {
+  0%, 100% { transform: translate3d(4%, 2%, 0) scale(1.05); }
+  50% { transform: translate3d(-5%, -4%, 0) scale(0.96); }
+}
+
+@keyframes studio-kenburns {
+  0% { transform: scale(1.04) translate3d(0, 0, 0); }
+  50% { transform: scale(1.11) translate3d(-1.2%, -0.7%, 0); }
+  100% { transform: scale(1.06) translate3d(0.8%, 0.4%, 0); }
+}
+
+@keyframes studio-shimmer {
+  0% { transform: translateX(-140%) skewX(-15deg); opacity: 0; }
+  20% { opacity: .18; }
+  55% { opacity: .08; }
+  100% { transform: translateX(260%) skewX(-15deg); opacity: 0; }
+}
+
+@keyframes studio-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes studio-pulse-soft {
+  0%, 100% { opacity: .45; transform: scale(1); }
+  50% { opacity: .75; transform: scale(1.08); }
+}
+
+@keyframes studio-grain {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(-1%, 1%, 0); }
+  50% { transform: translate3d(1%, -1%, 0); }
+  75% { transform: translate3d(.5%, 1%, 0); }
+}
+
+/* Landing hero */
+.cinematic-hero { isolation: isolate; background: #090b0f; }
+.hero-kenburns {
+  animation: studio-kenburns 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.hero-vignette {
+  background:
+    radial-gradient(circle at 50% 38%, transparent 10%, rgba(0,0,0,.14) 44%, rgba(0,0,0,.58) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.42) 0%, rgba(0,0,0,.28) 48%, rgba(0,0,0,.78) 100%);
+}
+.hero-light {
+  position: absolute;
+  width: 42vw;
+  height: 42vw;
+  border-radius: 999px;
+  filter: blur(70px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.hero-light-a {
+  top: -18%; left: -10%;
+  background: rgba(251, 191, 36, .16);
+  animation: studio-drift-a 13s ease-in-out infinite;
+}
+.hero-light-b {
+  right: -12%; bottom: -20%;
+  background: rgba(255,255,255,.10);
+  animation: studio-drift-b 16s ease-in-out infinite;
+}
+.hero-grain {
+  position: absolute;
+  inset: -15%;
+  pointer-events: none;
+  opacity: .14;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  animation: studio-grain .9s steps(2) infinite;
+}
+.hero-content { animation: fade-up .85s cubic-bezier(.22,.85,.28,1) both; }
+.hero-content > * { animation: fade-up .75s cubic-bezier(.22,.85,.28,1) both; }
+.hero-content > *:nth-child(1) { animation-delay: .06s; }
+.hero-content > *:nth-child(2) { animation-delay: .14s; }
+.hero-content > *:nth-child(3) { animation-delay: .23s; }
+.hero-content > *:nth-child(4) { animation-delay: .32s; }
+.hero-content > *:nth-child(5) { animation-delay: .42s; }
+
+.studio-cta {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+.studio-cta::after {
+  content: "";
+  position: absolute;
+  top: -60%; bottom: -60%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+  animation: studio-shimmer 5.5s ease-in-out infinite;
+}
+.studio-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,.18); }
+
+/* Soft animated backgrounds for landing sections and portals */
+.studio-section,
+.portal-canvas,
+.auth-form-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.studio-section::before,
+.portal-canvas::before,
+.auth-form-panel::before {
+  content: "";
+  position: absolute;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 999px;
+  left: -18rem;
+  top: -15rem;
+  background: radial-gradient(circle, var(--studio-warm), transparent 66%);
+  pointer-events: none;
+  z-index: -1;
+  animation: studio-drift-a 18s ease-in-out infinite;
+}
+.studio-section::after,
+.portal-canvas::after,
+.auth-form-panel::after {
+  content: "";
+  position: absolute;
+  width: 38rem;
+  height: 38rem;
+  border-radius: 999px;
+  right: -21rem;
+  bottom: -20rem;
+  background: radial-gradient(circle, var(--studio-cool), transparent 68%);
+  pointer-events: none;
+  z-index: -1;
+  animation: studio-drift-b 22s ease-in-out infinite;
+}
+.portal-canvas {
+  background:
+    linear-gradient(180deg, rgba(249,250,251,.96), rgba(248,250,252,.99)),
+    radial-gradient(circle at 10% 10%, rgba(245,158,11,.06), transparent 32%);
+}
+.portal-canvas > * { position: relative; z-index: 1; }
+
+/* Auth photo panel */
+.auth-photo-panel { isolation: isolate; background: #0b0d10; }
+.auth-photo-motion {
+  animation: studio-kenburns 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.auth-photo-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(245,158,11,.18), transparent 34%),
+    linear-gradient(140deg, rgba(0,0,0,.18), rgba(0,0,0,.68));
+}
+.auth-photo-panel > * { z-index: 3; }
+.auth-light-leak {
+  position: absolute;
+  z-index: 3;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 999px;
+  filter: blur(62px);
+  background: rgba(251,191,36,.13);
+  top: -9rem;
+  right: -9rem;
+  animation: studio-pulse-soft 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Cards */
+.studio-card-motion {
+  transition: transform .35s cubic-bezier(.2,.75,.25,1), box-shadow .35s ease, border-color .35s ease;
+  will-change: transform;
+}
+.studio-card-motion:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 55px rgba(17,24,39,.11);
+  border-color: rgba(245,158,11,.36);
+}
+.studio-card-motion img { transition: transform .55s cubic-bezier(.2,.75,.25,1); }
+.studio-card-motion:hover img { transform: scale(1.025); }
+
+.floating-badge { animation: studio-float 4.8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+}

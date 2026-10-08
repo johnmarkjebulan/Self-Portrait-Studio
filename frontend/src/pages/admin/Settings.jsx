@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 const TABS = [
   { value: "profile", label: "My Profile" },
   { value: "studio", label: "Studio Info" },
+  { value: "email", label: "Email (Brevo)" },
   { value: "availability", label: "Hours & Capacity" },
   { value: "booking", label: "Payment Policy" },
   { value: "cancellation", label: "Cancellation" },
@@ -46,6 +47,9 @@ export default function AdminSettings() {
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailTest, setEmailTest] = useState(user?.email || "");
+  const [emailTesting, setEmailTesting] = useState(false);
 
   useEffect(() => {
     settingsApi
@@ -54,6 +58,27 @@ export default function AdminSettings() {
       .catch((err) => toast(err.message || "Failed to load settings.", "error"))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (tab !== "email") return;
+    settingsApi.emailStatus()
+      .then(setEmailStatus)
+      .catch((err) => setEmailStatus({ configured: false, api_ok: false, message: err.message }));
+  }, [tab]);
+
+  const sendBrevoTest = async () => {
+    if (!emailTest.trim()) return toast("Enter an email address for the test.", "warning");
+    setEmailTesting(true);
+    try {
+      const result = await settingsApi.sendEmailTest(emailTest.trim());
+      toast(result.message || "Test email queued.", "success");
+      setEmailStatus(await settingsApi.emailStatus());
+    } catch (err) {
+      toast(err.message || "Brevo test failed.", "error");
+    } finally {
+      setEmailTesting(false);
+    }
+  };
 
   const saveSettings = async (partial) => {
     try {
@@ -258,6 +283,50 @@ export default function AdminSettings() {
             >
               Save Studio Info
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Brevo Email */}
+      {tab === "email" && (
+        <div className="bg-white rounded-2xl border border-gray-200 card-shadow p-6">
+          <div className="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h2 className="font-semibold text-gray-900">Brevo Transactional Email</h2>
+              <p className="text-sm text-gray-500 mt-1">Used for Gmail verification and appointment confirmation emails with tracking number and QR check-in.</p>
+            </div>
+            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${emailStatus?.api_ok ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+              {emailStatus?.api_ok ? "Connected" : emailStatus?.configured ? "Needs Attention" : "Not Configured"}
+            </span>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-5">
+            <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
+              <p className="text-xs uppercase tracking-wider text-gray-400">Sender</p>
+              <p className="text-sm font-semibold text-gray-900 mt-1">{emailStatus?.sender_name || "Pose and Pics Photography Studio"}</p>
+              <p className="text-xs text-gray-500 mt-1 break-all">{emailStatus?.sender_email || "Set BREVO_SENDER_EMAIL in backend/.env"}</p>
+            </div>
+            <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
+              <p className="text-xs uppercase tracking-wider text-gray-400">Brevo API</p>
+              <p className={`text-sm font-semibold mt-1 ${emailStatus?.api_ok ? "text-emerald-700" : "text-amber-700"}`}>{emailStatus?.api_ok ? "API key is working" : "Waiting for a valid API key / verified sender"}</p>
+              {emailStatus?.account?.email && <p className="text-xs text-gray-500 mt-1">Account: {emailStatus.account.email}</p>}
+            </div>
+          </div>
+
+          {emailStatus?.message && <div className="mb-5 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">{emailStatus.message}</div>}
+
+          <div className="rounded-2xl border border-gray-200 p-4 mb-5">
+            <p className="font-medium text-gray-900 text-sm">Send a test email</p>
+            <p className="text-xs text-gray-500 mt-1 mb-3">Use this after adding your Brevo API key and verifying the sender address.</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input type="email" value={emailTest} onChange={(e) => setEmailTest(e.target.value)} placeholder="yourname@gmail.com" className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400" />
+              <button type="button" onClick={sendBrevoTest} disabled={emailTesting || !emailStatus?.api_ok} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50">{emailTesting ? "Sending…" : "Send Test"}</button>
+            </div>
+          </div>
+
+          <div className="text-sm text-gray-600 leading-relaxed space-y-2">
+            <p><b>Setup:</b> In Brevo, create an API key under SMTP & API → API Keys, then verify <b>poseandpics@gmail.com</b> as a Sender.</p>
+            <p>In <code className="bg-gray-100 px-1.5 py-0.5 rounded">backend/.env</code>, set <code className="bg-gray-100 px-1.5 py-0.5 rounded">BREVO_API_KEY</code>, <code className="bg-gray-100 px-1.5 py-0.5 rounded">BREVO_SENDER_EMAIL</code>, and <code className="bg-gray-100 px-1.5 py-0.5 rounded">BREVO_SENDER_NAME</code>. Never place the API key in frontend code.</p>
           </div>
         </div>
       )}

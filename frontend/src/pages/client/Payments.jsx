@@ -255,7 +255,7 @@ export default function ClientPayments() {
           <div className="bg-gray-100 rounded-xl p-6 flex items-center justify-center mb-5">
             <div className="text-center">
               <div className="text-5xl font-bold text-gray-900 mb-2">QR</div>
-              <p className="text-xs text-gray-500">Self-Portrait Studio</p>
+              <p className="text-xs text-gray-500">Pose and Pics Photography Studio</p>
             </div>
           </div>
           <ol className="flex flex-col gap-3">

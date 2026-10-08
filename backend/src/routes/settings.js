@@ -4,6 +4,7 @@ const { authenticate, requireAdmin } = require('../middleware/auth');
 const { isValidTime, minutesFromTime } = require('../utils/dateTime');
 const { DEFAULT_HOURS } = require('../utils/availability');
 const { logActivity } = require('../utils/activityLog');
+const { configurationStatus, checkBrevoAccount, sendBrevoTestEmail } = require('../services/email');
 
 const FIELDS = [
   'studio_name', 'studio_address', 'studio_lat', 'studio_lng', 'studio_phone', 'studio_email',
@@ -82,6 +83,29 @@ async function getOrCreate() {
   if (!settings) settings = await StudioSettings.create({ id: 1, business_hours: DEFAULT_HOURS });
   return settings;
 }
+
+
+router.get('/email/status', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const config = configurationStatus();
+    if (!config.configured) return res.json({ ...config, api_ok: false, message: 'Add BREVO_API_KEY and a verified BREVO_SENDER_EMAIL to backend/.env.' });
+    try {
+      const account = await checkBrevoAccount();
+      return res.json({ ...config, api_ok: true, account });
+    } catch (err) {
+      return res.json({ ...config, api_ok: false, message: err.message });
+    }
+  } catch (err) { next(err); }
+});
+
+router.post('/email/test', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const to = String(req.body.email || req.user.email || '').trim();
+    if (!to) return res.status(400).json({ error: 'Test recipient email is required' });
+    const result = await sendBrevoTestEmail(to);
+    res.json({ success: true, message: `Test email queued for ${to}.`, message_id: result.messageId || null });
+  } catch (err) { next(err); }
+});
 
 // Public studio configuration. Payment QR numbers are intentionally public because
 // authenticated clients use the same endpoint during checkout.

@@ -4,10 +4,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, verifyEmail, resendVerification } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", mobile: "", password: "", confirmPassword: "" });
+  const [step, setStep] = useState("register");
+  const [code, setCode] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -15,138 +17,83 @@ export default function Register() {
   const validate = () => {
     const e = {};
     if (!form.name.trim()) e.name = "Full name is required.";
-    if (!form.email) e.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email.";
+    if (!form.email) e.email = "Gmail address is required.";
+    else if (!/^[a-z0-9._%+-]+@gmail\.com$/i.test(form.email.trim())) e.email = "Use a valid Gmail address (example@gmail.com).";
     if (!form.mobile) e.mobile = "Mobile number is required.";
-    else if (!/^09\d{9}$/.test(form.mobile.replace(/\s/g, ""))) e.mobile = "Enter a valid PH mobile (e.g. 09XXXXXXXXX).";
+    else if (!/^09\d{9}$/.test(form.mobile.replace(/\s/g, ""))) e.mobile = "Enter a valid PH mobile (09XXXXXXXXX).";
     if (!form.password) e.password = "Password is required.";
     else if (form.password.length < 8) e.password = "Password must be at least 8 characters.";
     if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
     return e;
   };
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) return setErrors(errs);
     setLoading(true);
     try {
-      const result = await register({ name: form.name, email: form.email, mobile: form.mobile, password: form.password });
-      if (result.success) {
-        toast("Account created! Welcome to Self-Portrait Studio.", "success");
-        navigate("/client/dashboard");
-      } else {
-        toast(result.message, "error");
-        setErrors({ general: result.message });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      const result = await register({ name: form.name, email: form.email.trim(), mobile: form.mobile, password: form.password });
+      if (!result.success) { setErrors({ general: result.message }); return toast(result.message, "error"); }
+      setStep("verify");
+      toast("Verification code sent to your Gmail.", "success");
+    } finally { setLoading(false); }
+  }
 
-  const set = (field) => (e) => {
-    setForm({ ...form, [field]: e.target.value });
-    setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
-  };
+  async function handleVerify(e) {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(code)) return toast("Enter the 6-digit code from your Gmail.", "warning");
+    setLoading(true);
+    try {
+      const result = await verifyEmail(form.email.trim(), code);
+      if (!result.success) return toast(result.message, "error");
+      toast("Gmail verified. Please log in to enter your dashboard.", "success");
+      navigate("/login", { replace: true, state: { registered: true, email: form.email.trim() } });
+    } finally { setLoading(false); }
+  }
 
-  return (
-    <div className="min-h-screen flex">
-      {/* Left photo panel */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&h=1200&fit=crop&auto=format"
-          alt="Portrait photography"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%)" }} />
-        <div className="absolute bottom-16 left-12 right-12">
-          <h2 className="font-display text-3xl font-light text-white leading-snug mb-3">
-            Begin your<br />portrait journey.
-          </h2>
-          <p className="text-white/50 text-sm">Join hundreds of clients who trust us with their most meaningful moments.</p>
-        </div>
-        <div className="absolute top-8 left-8">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="text-white font-bold text-xs">SP</span>
-            </div>
-            <span className="text-white/80 font-semibold text-sm">Self-Portrait Studio</span>
-          </Link>
-        </div>
-      </div>
+  async function resend() {
+    const result = await resendVerification(form.email.trim());
+    toast(result.message, result.success ? "success" : "error");
+  }
 
-      {/* Right form panel */}
-      <div className="flex-1 bg-white flex items-center justify-center px-4 sm:px-8 py-8 sm:py-12 overflow-y-auto">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden mb-8">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center">
-                <span className="text-white font-bold text-xs">SP</span>
-              </div>
-              <span className="font-semibold text-gray-900 text-sm">Self-Portrait Studio</span>
-            </Link>
-          </div>
+  const input = "w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 rounded-xl outline-none text-sm transition-colors";
+  const set = (field) => (e) => { setForm({ ...form, [field]: e.target.value }); setErrors(x => ({ ...x, [field]: undefined, general: undefined })); };
 
-          <h1 className="font-display text-3xl font-light text-gray-900 mb-1">Create your account</h1>
-          <p className="text-gray-500 text-sm mb-8">Start booking your portrait session today.</p>
-
-          {errors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">{errors.general}</div>
-          )}
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div>
-              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">Full Name</label>
-              <input type="text" value={form.name} onChange={set("name")} placeholder="Maria Santos"
-                className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 rounded-xl outline-none text-sm transition-colors" />
-              {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">Email Address</label>
-              <input type="email" value={form.email} onChange={set("email")} placeholder="you@example.com"
-                className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 rounded-xl outline-none text-sm transition-colors" />
-              {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">Mobile Number</label>
-              <input type="tel" value={form.mobile} onChange={set("mobile")} placeholder="09XXXXXXXXX"
-                className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 rounded-xl outline-none text-sm transition-colors" />
-              {errors.mobile && <p className="text-red-500 text-xs mt-1.5">{errors.mobile}</p>}
-            </div>
-
-            <div>
-              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">Password</label>
-              <div className="relative">
-                <input type={showPass ? "text" : "password"} value={form.password} onChange={set("password")} placeholder="Minimum 8 characters"
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 pr-12 rounded-xl outline-none text-sm transition-colors" />
-                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-medium">
-                  {showPass ? "Hide" : "Show"}
-                </button>
-              </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>}
-            </div>
-
-            <div>
-              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">Confirm Password</label>
-              <input type={showPass ? "text" : "password"} value={form.confirmPassword} onChange={set("confirmPassword")} placeholder="Re-enter password"
-                className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:bg-white text-gray-900 placeholder:text-gray-400 px-4 py-3 rounded-xl outline-none text-sm transition-colors" />
-              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1.5">{errors.confirmPassword}</p>}
-            </div>
-
-            <button type="submit" disabled={loading}
-              className="bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors text-sm mt-1">
-              {loading ? "Creating account…" : "Create Account"}
-            </button>
+  return <div className="min-h-screen flex">
+    <div className="auth-photo-panel hidden lg:flex flex-1 relative overflow-hidden">
+      <img src="/studio-media/hero-main.jpg" alt="Pose and Pics" className="auth-photo-motion absolute inset-0 w-full h-full object-cover" />
+      <div className="auth-light-leak" />
+      <div className="absolute bottom-14 left-12 right-12 text-white"><h2 className="font-display text-4xl font-light">Your account. Your session.</h2><p className="text-white/70 mt-3 text-sm">Verify your Gmail, then log in to book and manage your appointments.</p></div>
+    </div>
+    <div className="auth-form-panel flex-1 bg-white flex items-center justify-center px-4 sm:px-8 py-12">
+      <div className="w-full max-w-md">
+        <Link to="/" className="text-sm text-gray-500 hover:text-gray-900">← Back to studio</Link>
+        {step === "register" ? <>
+          <h1 className="font-display text-3xl font-light text-gray-900 mt-6">Create your account</h1>
+          <p className="text-gray-500 text-sm mt-1 mb-6">Use a real Gmail account. You will verify it before you can log in.</p>
+          {errors.general && <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-5">{errors.general}</div>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Full Name</label><input value={form.name} onChange={set("name")} className={input} placeholder="Maria Santos" />{errors.name&&<p className="text-red-500 text-xs mt-1">{errors.name}</p>}</div>
+            <div><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Gmail Address</label><input type="email" value={form.email} onChange={set("email")} className={input} placeholder="yourname@gmail.com" />{errors.email&&<p className="text-red-500 text-xs mt-1">{errors.email}</p>}</div>
+            <div><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Mobile Number</label><input value={form.mobile} onChange={set("mobile")} className={input} placeholder="09XXXXXXXXX" />{errors.mobile&&<p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}</div>
+            <div><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Password</label><div className="relative"><input type={showPass?"text":"password"} value={form.password} onChange={set("password")} className={`${input} pr-16`} placeholder="Minimum 8 characters"/><button type="button" onClick={()=>setShowPass(v=>!v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">{showPass?"Hide":"Show"}</button></div>{errors.password&&<p className="text-red-500 text-xs mt-1">{errors.password}</p>}</div>
+            <div><label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Confirm Password</label><input type={showPass?"text":"password"} value={form.confirmPassword} onChange={set("confirmPassword")} className={input}/>{errors.confirmPassword&&<p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}</div>
+            <button disabled={loading} className="studio-cta w-full bg-gray-900 text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-60 transition-all">{loading?"Creating account…":"Create Account & Verify Gmail"}</button>
           </form>
-
-          <p className="text-gray-500 text-sm text-center mt-8">
-            Already have an account?{" "}
-            <Link to="/login" className="text-gray-900 hover:text-gray-700 font-semibold transition-colors">Sign in</Link>
-          </p>
-        </div>
+          <p className="text-center text-sm text-gray-500 mt-6">Already registered? <Link to="/login" className="font-semibold text-gray-900">Log in</Link></p>
+        </> : <>
+          <div className="mt-8 w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl">✉</div>
+          <h1 className="font-display text-3xl font-light text-gray-900 mt-5">Verify your Gmail</h1>
+          <p className="text-gray-500 text-sm mt-2">We sent a 6-digit code to <b className="text-gray-800">{form.email}</b>.</p>
+          <form onSubmit={handleVerify} className="mt-7 space-y-4">
+            <input value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" className={`${input} text-center text-2xl tracking-[.5em] font-semibold`} placeholder="000000" />
+            <button disabled={loading} className="studio-cta w-full bg-gray-900 text-white py-3.5 rounded-xl font-semibold text-sm disabled:opacity-60 transition-all">{loading?"Verifying…":"Verify Gmail"}</button>
+          </form>
+          <div className="flex justify-between mt-5 text-sm"><button onClick={resend} className="font-semibold text-gray-900">Resend code</button><button onClick={()=>setStep("register")} className="text-gray-500">Change email</button></div>
+          <p className="mt-7 text-xs text-gray-400">After verification, you still need to log in. Registration does not automatically open the client dashboard.</p>
+        </>}
       </div>
     </div>
-  );
+  </div>;
 }

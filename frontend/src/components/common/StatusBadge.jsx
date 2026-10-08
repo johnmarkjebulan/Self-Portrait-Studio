@@ -26,7 +26,7 @@ export function StatusBadge({ status }) {
     pending: "Pending",
     confirmed: "Confirmed",
     waiting: "Waiting",
-    now_serving: "Now Serving",
+    now_serving: "Ongoing",
     completed: "Completed",
     cancelled: "Cancelled",
     no_show: "No Show",

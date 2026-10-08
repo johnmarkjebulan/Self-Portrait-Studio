@@ -93,8 +93,11 @@ function PackageStep({ selected, onSelect }) {
         <button
           key={pkg.id}
           onClick={() => onSelect(pkg)}
-          className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${selected?.id === pkg.id ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white hover:border-gray-300"}`}
+          className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all ${selected?.id === pkg.id ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white hover:border-gray-300"}`}
         >
+          <div className="grid sm:grid-cols-[150px_1fr]">
+            {(pkg.image_data || pkg.image_url) && <div className="bg-gray-100"><img src={pkg.image_data || pkg.image_url} alt={pkg.name} className="w-full h-full min-h-[150px] object-cover" /></div>}
+            <div className="p-5">
           <div className="flex justify-between items-start mb-3">
             <div>
               <h3 className="font-semibold text-gray-900">{pkg.name}</h3>
@@ -125,6 +128,8 @@ function PackageStep({ selected, onSelect }) {
               Selected
             </div>
           )}
+            </div>
+          </div>
         </button>
       ))}
     </div>
@@ -528,7 +533,7 @@ function PaymentStep({ appt, settings, onComplete }) {
   };
 
   const qrValue = settings?.qr_gcash_number || settings?.gcash_number || "09171234567";
-  const studioName = settings?.studio_name || "Self-Portrait Studio";
+  const studioName = settings?.studio_name || "Pose and Pics Photography Studio";
 
   return (
     <div className="flex flex-col gap-6">

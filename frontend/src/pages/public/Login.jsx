@@ -29,7 +29,7 @@ export default function Login() {
       const result = await login(form.email, form.password);
       if (result.success) {
         toast("Welcome back!", "success");
-        navigate(result.user?.role === "admin" ? "/admin/dashboard" : "/client/dashboard", { replace: true });
+        navigate(result.user?.role === "admin" ? "/admin/dashboard" : result.user?.role === "staff" ? "/staff/dashboard" : "/client/dashboard", { replace: true });
       } else {
         toast(result.message, "error");
         setErrors({ general: result.message });
@@ -42,43 +42,43 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left photo panel */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+      <div className="auth-photo-panel hidden lg:flex flex-1 relative overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&h=1200&fit=crop&auto=format"
+          src="/studio-media/hero-main.jpg"
           alt="Studio portrait"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="auth-photo-motion absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)" }} />
+        <div className="auth-light-leak" />
         <div className="absolute bottom-16 left-12 right-12">
           <p className="font-display text-3xl font-light text-white leading-snug mb-3">
             "Every portrait is a story waiting to be told."
           </p>
-          <p className="text-white/50 text-sm">— Self-Portrait Studio</p>
+          <p className="text-white/50 text-sm">— Pose and Pics Photography Studio</p>
         </div>
         <div className="absolute top-8 left-8">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
               <span className="text-white font-bold text-xs">SP</span>
             </div>
-            <span className="text-white/80 font-semibold text-sm">Self-Portrait Studio</span>
+            <span className="text-white/80 font-semibold text-sm">Pose and Pics Photography Studio</span>
           </Link>
         </div>
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 bg-white flex items-center justify-center px-4 sm:px-8 py-10 sm:py-16">
+      <div className="auth-form-panel flex-1 bg-white flex items-center justify-center px-4 sm:px-8 py-10 sm:py-16">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">SP</span>
               </div>
-              <span className="font-semibold text-gray-900 text-sm">Self-Portrait Studio</span>
+              <span className="font-semibold text-gray-900 text-sm">Pose and Pics Photography Studio</span>
             </Link>
           </div>
 
           <h1 className="font-display text-3xl font-light text-gray-900 mb-1">Welcome back</h1>
-          <p className="text-gray-500 text-sm mb-8">Sign in to your account to continue.</p>
+          <p className="text-gray-500 text-sm mb-8">One login for Owner, Staff, and Client accounts.</p>
 
           {errors.general && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-6">{errors.general}</div>
@@ -117,7 +117,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors text-sm"
+              className="studio-cta bg-gray-900 hover:bg-gray-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-all text-sm"
             >
               {loading ? "Signing in…" : "Sign In"}
             </button>

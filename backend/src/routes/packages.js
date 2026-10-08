@@ -3,13 +3,29 @@ const { Package, Appointment, Addon } = require('../models');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 const { logActivity } = require('../utils/activityLog');
 
-const PACKAGE_FIELDS = ['name', 'description', 'price', 'duration', 'max_people', 'edited_photos', 'printed_photos', 'services', 'active'];
+const PACKAGE_FIELDS = ['name', 'description', 'price', 'duration', 'max_people', 'edited_photos', 'printed_photos', 'services', 'image_url', 'image_data', 'active'];
 const ADDON_FIELDS = ['name', 'description', 'price', 'active'];
 
 function pick(body, fields) {
   const result = {};
   for (const field of fields) if (body[field] !== undefined) result[field] = body[field];
   return result;
+}
+
+function validatePackageImage(data) {
+  if (data.image_data === undefined) return;
+  const imageData = String(data.image_data || '');
+  if (imageData && !imageData.startsWith('data:image/')) {
+    const err = new Error('Please choose a valid package image.');
+    err.status = 400;
+    throw err;
+  }
+  if (imageData.length > 7_000_000) {
+    const err = new Error('Package image is too large. Please use an image under about 5 MB.');
+    err.status = 413;
+    throw err;
+  }
+  data.image_data = imageData || null;
 }
 
 function validatePackage(data, { partial = false } = {}) {
@@ -32,6 +48,7 @@ function validatePackage(data, { partial = false } = {}) {
     if (!Array.isArray(data.services)) return 'services must be an array';
     data.services = data.services.map((item) => String(item).trim()).filter(Boolean).slice(0, 30);
   }
+  if (data.image_url !== undefined) data.image_url = String(data.image_url || '').trim().slice(0, 500) || null;
   if (data.active !== undefined) data.active = Boolean(data.active);
   return null;
 }
@@ -47,6 +64,7 @@ function validateAddon(data, { partial = false } = {}) {
     data.price = price;
   }
   if (data.description !== undefined) data.description = String(data.description || '').trim().slice(0, 3000);
+  if (data.image_url !== undefined) data.image_url = String(data.image_url || '').trim().slice(0, 500) || null;
   if (data.active !== undefined) data.active = Boolean(data.active);
   return null;
 }
@@ -137,6 +155,7 @@ router.post('/', authenticate, requireAdmin, async (req, res, next) => {
     const data = pick(req.body, PACKAGE_FIELDS);
     const error = validatePackage(data);
     if (error) return res.status(400).json({ error });
+    validatePackageImage(data);
     const pkg = await Package.create(data);
     await logActivity(req, 'PACKAGE_CREATE', `Created package ${pkg.name}`, 'package', pkg.id);
     res.status(201).json({ package: pkg });
@@ -150,6 +169,7 @@ router.patch('/:id', authenticate, requireAdmin, async (req, res, next) => {
     const data = pick(req.body, PACKAGE_FIELDS);
     const error = validatePackage(data, { partial: true });
     if (error) return res.status(400).json({ error });
+    validatePackageImage(data);
     if (!Object.keys(data).length) return res.status(400).json({ error: 'No valid fields supplied' });
     await pkg.update(data);
     await logActivity(req, 'PACKAGE_UPDATE', `Updated package ${pkg.name}`, 'package', pkg.id);

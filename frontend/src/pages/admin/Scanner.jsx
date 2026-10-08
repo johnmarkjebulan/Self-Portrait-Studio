@@ -37,13 +37,23 @@ export default function AdminScanner() {
     if (!clean) return;
     setError("");
     try {
-      const appt = await appointmentsApi.findByTracking(clean);
-      setResult(appt);
-      setCheckInDone(false);
+      let appt = await appointmentsApi.findByTracking(clean);
       stopCamera();
+
+      const today = studioToday();
+      if (appt.date === today && ["confirmed", "rescheduled"].includes(appt.status)) {
+        appt = await appointmentsApi.update(appt.id, { status: "now_serving" });
+        setCheckInDone(true);
+        toast(`QR accepted. ${appt.tracking_number} is now Ongoing.`, "success");
+      } else {
+        setCheckInDone(appt.status === "now_serving");
+      }
+
+      setResult(appt);
     } catch (err) {
       setResult(null);
-      setError("No appointment found for that tracking number.");
+      setCheckInDone(false);
+      setError(err.message || "No appointment found for that tracking number.");
     }
   };
 
@@ -122,10 +132,10 @@ export default function AdminScanner() {
     }
 
     try {
-      const updated = await appointmentsApi.update(result.id, { status: "waiting" });
+      const updated = await appointmentsApi.update(result.id, { status: "now_serving" });
       setResult(updated);
       setCheckInDone(true);
-      toast(`Checked in! Queue #${updated.queue_number} assigned.`, "success");
+      toast(`Session started. ${updated.tracking_number} is now Ongoing.`, "success");
     } catch (err) {
       toast(err.message || "Check-in failed.", "error");
     }
@@ -149,7 +159,7 @@ export default function AdminScanner() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">QR Check-In Scanner</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Scan a client QR code or enter a tracking number to check them in.
+          Scan the QR from the client's confirmation email. A confirmed appointment automatically becomes Ongoing as soon as the QR is recognized.
         </p>
       </div>
 
@@ -278,7 +288,7 @@ export default function AdminScanner() {
                 </svg>
               </div>
               <h3 className="font-semibold text-emerald-900 text-lg mb-1">
-                Checked In Successfully!
+                Session Started — Ongoing
               </h3>
               <p className="text-emerald-700 text-sm mb-1">
                 {result.client ? result.client.name : result.client_name || "—"}
@@ -287,7 +297,7 @@ export default function AdminScanner() {
                 {result.tracking_number}
               </div>
               <p className="text-emerald-700 text-sm">
-                Queue #{result.queue_number} · Waiting
+                {result.package?.duration || 60}-minute session · Auto-completes when the session timer ends
               </p>
             </div>
           )}
@@ -374,6 +384,15 @@ export default function AdminScanner() {
                   </p>
                 </div>
               )}
+              {result.service_end_at && result.status === "now_serving" && (
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Auto Complete At</p>
+                  <p className="text-emerald-700 font-semibold">
+                    {new Date(result.service_end_at).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}
+                  </p>
+                  <p className="text-gray-400 text-xs">Based on package duration</p>
+                </div>
+              )}
               {result.special_requests && (
                 <div className="sm:col-span-2">
                   <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
@@ -391,15 +410,17 @@ export default function AdminScanner() {
                   onClick={handleCheckIn}
                   className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
                 >
-                  Check In & Assign Queue
+                  Start Session · Mark Ongoing
                 </button>
               )}
               {!canCheckIn && !checkInDone && (
                 <div className="flex-1 text-center text-gray-400 text-sm py-3">
                   {!isToday
                     ? "Not scheduled for today"
-                    : result.status === "waiting" || result.status === "now_serving"
-                    ? `Already in queue (#${result.queue_number})`
+                    : result.status === "now_serving"
+                    ? "Session is already Ongoing"
+                    : result.status === "waiting"
+                    ? `Already checked in (#${result.queue_number})`
                     : `Status: ${result.status.replace(/_/g, " ")}`}
                 </div>
               )}

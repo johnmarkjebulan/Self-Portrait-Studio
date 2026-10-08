@@ -11,6 +11,8 @@ const emptyPkg = () => ({
   edited_photos: 10,
   printed_photos: 0,
   services: [],
+  image_url: "",
+  image_data: "",
   active: true,
 });
 
@@ -133,6 +135,32 @@ function FormField({ label, required = false, children }) {
 const inputClass =
   "w-full bg-white border border-gray-200 focus:border-gray-400 text-gray-900 placeholder:text-gray-400 px-3.5 py-2.5 rounded-xl outline-none text-sm transition-colors";
 
+async function preparePackageImage(file) {
+  if (!file) return "";
+  if (!file.type?.startsWith("image/")) throw new Error("Please choose a valid image file.");
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Could not read the selected image."));
+    reader.readAsDataURL(file);
+  });
+  const image = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not process the selected image."));
+    img.src = dataUrl;
+  });
+  const maxSize = 1400;
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Image processing is not supported in this browser.");
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.86);
+}
+
 export default function AdminPackages() {
   const { toast } = useToast();
   const [tab, setTab] = useState("packages");
@@ -149,6 +177,8 @@ export default function AdminPackages() {
   const [editPkg, setEditPkg] = useState(null);
   const [formData, setFormData] = useState(emptyPkg());
   const [serviceInput, setServiceInput] = useState("");
+  const packageImageRef = useRef(null);
+  const [processingPackageImage, setProcessingPackageImage] = useState(false);
 
   // Delete modal
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -212,6 +242,26 @@ export default function AdminPackages() {
     setShowForm(true);
   };
 
+  const handlePackageImage = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setProcessingPackageImage(true);
+    try {
+      const imageData = await preparePackageImage(file);
+      setFormData((current) => ({ ...current, image_data: imageData }));
+    } catch (err) {
+      toast(err.message || "Could not prepare package image.", "error");
+      if (packageImageRef.current) packageImageRef.current.value = "";
+    } finally {
+      setProcessingPackageImage(false);
+    }
+  };
+
+  const removePackageImage = () => {
+    setFormData((current) => ({ ...current, image_data: "", image_url: "" }));
+    if (packageImageRef.current) packageImageRef.current.value = "";
+  };
+
   const savePkg = async () => {
     if (!formData.name.trim()) { toast("Package name is required.", "error"); return; }
     if (formData.price <= 0) { toast("Price must be greater than zero.", "error"); return; }
@@ -227,8 +277,8 @@ export default function AdminPackages() {
       }
       setShowForm(false);
       await load();
-    } catch {
-      toast("Failed to save package.", "error");
+    } catch (err) {
+      toast(err.message || "Failed to save package.", "error");
     }
   };
 
@@ -444,8 +494,19 @@ export default function AdminPackages() {
                           className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${!pkg.active ? "opacity-55" : ""}`}
                         >
                           <td className="py-3.5 pl-5 pr-4">
-                            <p className="font-semibold text-gray-900 text-sm">{pkg.name}</p>
-                            <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{pkg.description}</p>
+                            <div className="flex items-center gap-3 min-w-[220px]">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                {(pkg.image_data || pkg.image_url) ? (
+                                  <img src={pkg.image_data || pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full grid place-items-center text-gray-300 text-lg">📷</div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm">{pkg.name}</p>
+                                <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{pkg.description}</p>
+                              </div>
+                            </div>
                           </td>
                           <td className="py-3.5 pr-4 text-gray-600 text-sm">{pkg.duration} min</td>
                           <td className="py-3.5 pr-4 text-gray-900 font-mono font-semibold text-sm">
@@ -613,6 +674,34 @@ export default function AdminPackages() {
                   Basic Information
                 </h3>
                 <div className="space-y-4">
+                  <FormField label="Package / Bundle Photo">
+                    <div className="grid sm:grid-cols-[170px_1fr] gap-4 items-start">
+                      <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 border border-gray-200">
+                        {(formData.image_data || formData.image_url) ? (
+                          <img src={formData.image_data || formData.image_url} alt="Package preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="h-full grid place-items-center text-center px-4">
+                            <div><div className="text-2xl mb-1">📷</div><p className="text-xs text-gray-400">No photo selected</p></div>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <input
+                          ref={packageImageRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePackageImage}
+                          disabled={processingPackageImage}
+                          className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-gray-800"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">JPG, PNG, or WEBP. The image is optimized before saving.</p>
+                        {processingPackageImage && <p className="text-xs text-amber-600 mt-2">Preparing image…</p>}
+                        {(formData.image_data || formData.image_url) && (
+                          <button type="button" onClick={removePackageImage} className="mt-3 text-xs font-semibold text-red-600 hover:text-red-700">Remove photo</button>
+                        )}
+                      </div>
+                    </div>
+                  </FormField>
                   <FormField label="Package Name" required>
                     <input
                       type="text"
@@ -792,9 +881,10 @@ export default function AdminPackages() {
               </button>
               <button
                 onClick={savePkg}
-                className="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-semibold transition-colors"
+                disabled={processingPackageImage}
+                className="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
               >
-                {formMode === "edit" ? "Save Changes" : "Save Package"}
+                {processingPackageImage ? "Preparing Photo…" : (formMode === "edit" ? "Save Changes" : "Save Package")}
               </button>
             </div>
           </div>

@@ -35,12 +35,13 @@ export default function PublicLayout() {
             <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center">
               <span className="text-white font-bold text-xs">SP</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm tracking-tight">Self-Portrait Studio</span>
+            <span className="font-semibold text-gray-900 text-sm tracking-tight">Pose and Pics Photography Studio</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Home</Link>
             <Link to="/#packages" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Packages</Link>
+            <Link to="/#gallery" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Gallery</Link>
             <Link to="/#how-it-works" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">How It Works</Link>
             <Link to="/#about" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">About</Link>
             <Link to="/#contact" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Contact</Link>
@@ -68,6 +69,7 @@ export default function PublicLayout() {
           <div className="md:hidden bg-white border-t border-gray-100 px-4 sm:px-6 py-4 flex flex-col gap-4 shadow-lg">
             <Link to="/" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Home</Link>
             <Link to="/#packages" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Packages</Link>
+            <Link to="/#gallery" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Gallery</Link>
             <Link to="/#how-it-works" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>How It Works</Link>
             <Link to="/#about" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>About</Link>
             <Link to="/#contact" className="text-gray-700 text-sm font-medium" onClick={() => setMenuOpen(false)}>Contact</Link>
@@ -98,10 +100,10 @@ export default function PublicLayout() {
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">SP</span>
               </div>
-              <span className="font-semibold text-white text-sm">Self-Portrait Studio</span>
+              <span className="font-semibold text-white text-sm">Pose and Pics Photography Studio</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              Professional self-portrait studio for everyone. Book your session online and create memories that last a lifetime.
+              Professional photography studio for portraits, milestones, celebrations, and memorable sessions. Book your appointment online with ease.
             </p>
             <div className="flex gap-4 mt-5">
               {["f", "ig", "tt", "yt"].map(s => (
@@ -115,6 +117,7 @@ export default function PublicLayout() {
             <h4 className="text-white font-semibold text-sm mb-4">Quick Links</h4>
             <div className="flex flex-col gap-2.5">
               <Link to="/#packages" className="text-gray-400 hover:text-white text-sm transition-colors">Packages</Link>
+              <Link to="/#gallery" className="text-gray-400 hover:text-white text-sm transition-colors">Gallery & Promos</Link>
               <Link to="/register" className="text-gray-400 hover:text-white text-sm transition-colors">Book Appointment</Link>
               <Link to="/login" className="text-gray-400 hover:text-white text-sm transition-colors">Client Login</Link>
               <Link to="/#how-it-works" className="text-gray-400 hover:text-white text-sm transition-colors">How It Works</Link>
@@ -123,15 +126,21 @@ export default function PublicLayout() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Contact Us</h4>
             <div className="flex flex-col gap-2.5 text-gray-400 text-sm">
-              <p>📍 123 Photography St, Makati City</p>
-              <p>📞 +63 912 345 6789</p>
-              <p>✉️ hello@selfportrait.studio</p>
-              <p>🕐 Mon–Sat  9:00 AM – 9:00 PM</p>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Poblacion%204%2C%20Calaca%2C%20Batangas%2C%20Philippines%204212"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                📍 San Agustin St, Poblacion 4, Calaca, 4212 Batangas
+              </a>
+              <a href="tel:09108313847" className="hover:text-white transition-colors">📞 0910 831 3847</a>
+              <a href="mailto:poseandpics@gmail.com" className="hover:text-white transition-colors">✉️ poseandpics@gmail.com</a>
             </div>
           </div>
         </div>
         <div className="border-t border-white/10 py-5 px-4 sm:px-6">
-          <p className="text-center text-gray-600 text-xs">© 2026 Self-Portrait Studio. All rights reserved.</p>
+          <p className="text-center text-gray-600 text-xs">© 2026 Pose and Pics Photography Studio. All rights reserved.</p>
         </div>
       </footer>
     </div>

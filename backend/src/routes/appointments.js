@@ -15,6 +15,8 @@ const { notifyAdmins } = require('../utils/notifyAdmins');
 const { dateKeyInTimeZone, hoursUntilAppointment, isValidDateKey } = require('../utils/dateTime');
 const { getDateAvailability, assertSlotAvailable } = require('../utils/availability');
 const { canAdminTransition, canClientRequest } = require('../utils/appointmentState');
+const { sendAppointmentConfirmation } = require('../services/email');
+const { autoCompleteDueSessions } = require('../services/appointmentLifecycle');
 
 async function generateTracking(transaction) {
   const year = Number(dateKeyInTimeZone().slice(0, 4));
@@ -75,7 +77,8 @@ const appointmentInclude = [
 // GET /api/appointments — admin: all; client: own
 router.get('/', authenticate, async (req, res, next) => {
   try {
-    const where = req.user.role === 'admin' ? {} : { client_id: req.user.id };
+    await autoCompleteDueSessions();
+    const where = ['admin', 'staff'].includes(req.user.role) ? {} : { client_id: req.user.id };
     if (req.query.date) where.date = req.query.date;
     if (req.query.status) where.status = req.query.status;
     const appointments = await Appointment.findAll({
@@ -90,6 +93,7 @@ router.get('/', authenticate, async (req, res, next) => {
 // GET /api/appointments/tracking/:tn — QR scanner lookup
 router.get('/tracking/:tn', authenticate, requireAdmin, async (req, res, next) => {
   try {
+    await autoCompleteDueSessions();
     const appt = await Appointment.findOne({
       where: { tracking_number: req.params.tn },
       include: appointmentInclude,
@@ -102,6 +106,7 @@ router.get('/tracking/:tn', authenticate, requireAdmin, async (req, res, next) =
 // GET /api/appointments/queue/today — today roster + live queue
 router.get('/queue/today', authenticate, requireAdmin, async (req, res, next) => {
   try {
+    await autoCompleteDueSessions();
     const today = dateKeyInTimeZone();
     const queue = await Appointment.findAll({
       where: {
@@ -122,9 +127,10 @@ router.get('/queue/today', authenticate, requireAdmin, async (req, res, next) =>
 // GET /api/appointments/:id
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
+    await autoCompleteDueSessions();
     const appt = await Appointment.findByPk(req.params.id, { include: appointmentInclude });
     if (!appt) return res.status(404).json({ error: 'Appointment not found' });
-    if (req.user.role !== 'admin' && appt.client_id !== req.user.id) {
+    if (!['admin', 'staff'].includes(req.user.role) && appt.client_id !== req.user.id) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     res.json({ appointment: appt });
@@ -204,7 +210,13 @@ router.post('/', authenticate, async (req, res, next) => {
     await notifyAdmins('New Booking', `${req.user.name || 'A client'} submitted booking ${created.tracking_number}.`, 'booking', created.id, 'appointment');
     await logActivity(req, 'APPOINTMENT_CREATE', `Created ${created.tracking_number}`, created.id);
     const appt = await Appointment.findByPk(created.id, { include: appointmentInclude });
-    res.status(201).json({ appointment: appt });
+    sendAppointmentConfirmation({
+      to: req.user.email,
+      name: req.user.name || 'Client',
+      appointment: appt,
+      pkg: appt.package,
+    }).catch((emailErr) => console.error('Appointment email failed:', emailErr.message));
+    res.status(201).json({ appointment: appt, email_confirmation_queued: true });
   } catch (err) {
     if (err.name === 'SequelizeUniqueConstraintError') err.status = 409;
     next(err);
@@ -280,7 +292,18 @@ router.patch('/:id', authenticate, async (req, res, next) => {
         updateData.checked_in_by = req.user.id;
         updateData.arrival_time = req.body.arrival_time || appt.arrival_time || null;
       }
-      if (targetStatus === 'now_serving') updateData.service_start_at = appt.service_start_at || new Date();
+      if (targetStatus === 'now_serving') {
+        if (appt.date !== dateKeyInTimeZone()) return res.status(409).json({ error: 'Only today\'s appointments can be started' });
+        const startedAt = appt.service_start_at || new Date();
+        const pkg = await Package.findByPk(appt.package_id, { attributes: ['duration'] });
+        const durationMinutes = Math.max(1, Number(pkg?.duration || 60));
+        if (!appt.queue_number) updateData.queue_number = await generateQueueNumber(appt.date);
+        updateData.checked_in_at = appt.checked_in_at || startedAt;
+        updateData.queue_entry_at = appt.queue_entry_at || startedAt;
+        updateData.checked_in_by = req.user.id;
+        updateData.service_start_at = startedAt;
+        updateData.service_end_at = new Date(startedAt.getTime() + durationMinutes * 60 * 1000);
+      }
       if (targetStatus === 'completed') updateData.service_end_at = new Date();
       if (targetStatus === 'cancelled') updateData.queue_number = null;
     }
@@ -303,7 +326,7 @@ router.patch('/:id', authenticate, async (req, res, next) => {
         rejected: ['Booking Rejected', `Your booking ${appt.tracking_number} was not approved.`],
         rescheduled: ['Booking Rescheduled', `Your appointment ${appt.tracking_number} has been rescheduled to ${appt.date} at ${appt.time}.`],
         waiting: ['Checked In', `You are checked in for ${appt.tracking_number}. Queue #${appt.queue_number}.`],
-        now_serving: ["It's Your Turn!", `Queue #${appt.queue_number} — please proceed to the studio.`],
+        now_serving: ['Session Ongoing', `Your session ${appt.tracking_number} is now ongoing.`],
         completed: ['Session Completed', `Your session ${appt.tracking_number} has been completed. Thank you!`],
         no_show: ['Appointment Marked No Show', `Appointment ${appt.tracking_number} was marked as no-show.`],
       };
@@ -314,6 +337,18 @@ router.patch('/:id', authenticate, async (req, res, next) => {
 
     await logActivity(req, 'APPOINTMENT_UPDATE', `Status: ${previousStatus} → ${appt.status}`, appt.id);
     const updated = await Appointment.findByPk(appt.id, { include: appointmentInclude });
+
+    // Send the client a fresh confirmed/rescheduled appointment email with
+    // the tracking number + studio QR once the Owner finalizes the schedule.
+    if (req.user.role === 'admin' && ['confirmed', 'rescheduled'].includes(targetStatus)) {
+      sendAppointmentConfirmation({
+        to: updated.client?.email,
+        name: updated.client?.name || 'Client',
+        appointment: updated,
+        pkg: updated.package,
+      }).catch((emailErr) => console.error('Confirmed appointment email failed:', emailErr.message));
+    }
+
     res.json({ appointment: updated });
   } catch (err) { next(err); }
 });

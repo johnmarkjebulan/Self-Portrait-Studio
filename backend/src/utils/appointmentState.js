@@ -1,9 +1,9 @@
 const ADMIN_TRANSITIONS = {
   pending: ['confirmed', 'rejected', 'cancelled'],
-  confirmed: ['waiting', 'rescheduled', 'cancelled', 'no_show'],
+  confirmed: ['waiting', 'now_serving', 'rescheduled', 'cancelled', 'no_show'],
   cancellation_requested: ['cancelled', 'confirmed'],
   reschedule_requested: ['rescheduled', 'confirmed'],
-  rescheduled: ['confirmed', 'waiting', 'cancelled', 'no_show'],
+  rescheduled: ['confirmed', 'waiting', 'now_serving', 'cancelled', 'no_show'],
   checked_in: ['waiting', 'no_show'], // legacy compatibility
   waiting: ['now_serving', 'cancelled', 'no_show'],
   now_serving: ['completed', 'cancelled'],

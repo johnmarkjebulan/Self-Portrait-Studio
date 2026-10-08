@@ -92,14 +92,28 @@ export function AuthProvider({ children }) {
 
   const register = async (data) => {
     try {
-      const { user: registeredUser, token } = await authApi.register(data);
-      setToken(token);
-      localStorage.setItem("sp_current_user", JSON.stringify(registeredUser));
-      setUser(registeredUser);
-      setAuthReady(true);
-      return { success: true, message: "Registration successful.", user: registeredUser };
+      const result = await authApi.register(data);
+      return { success: true, message: result.message || "Registration successful.", ...result };
     } catch (err) {
       return { success: false, message: err.message || "Registration failed." };
+    }
+  };
+
+  const verifyEmail = async (email, code) => {
+    try {
+      const result = await authApi.verifyEmail(email, code);
+      return { success: true, message: result.message || "Email verified." };
+    } catch (err) {
+      return { success: false, message: err.message || "Verification failed." };
+    }
+  };
+
+  const resendVerification = async (email) => {
+    try {
+      const result = await authApi.resendVerification(email);
+      return { success: true, message: result.message || "Code sent." };
+    } catch (err) {
+      return { success: false, message: err.message || "Could not resend code." };
     }
   };
 
@@ -122,11 +136,14 @@ export function AuthProvider({ children }) {
     authReady,
     login,
     register,
+    verifyEmail,
+    resendVerification,
     logout,
     updateProfile,
     isAdmin: user?.role === "admin",
+    isStaff: user?.role === "staff",
     isClient: user?.role === "client",
-    dashboardPath: user?.role === "admin" ? "/admin/dashboard" : "/client/dashboard",
+    dashboardPath: user?.role === "admin" ? "/admin/dashboard" : user?.role === "staff" ? "/staff/dashboard" : "/client/dashboard",
   }), [user, authReady]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
